@@ -20,6 +20,9 @@ public class UserDto {
     @NotEmpty
     private String name;
 
+    @NotEmpty
+    private String phoneNumber;
+
     private String nickname;
 
     public static User getUser(UserDto userDto) {
@@ -30,6 +33,8 @@ public class UserDto {
                 .email(userDto.getEmail())
                 .password(userDto.getPassword())
                 .name(userDto.getNickname())
+                .phoneNumber(userDto.getPhoneNumber())
+                .nickname(userDto.getNickname())
                 .build();
     }
 }

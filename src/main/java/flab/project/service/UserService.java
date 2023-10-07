@@ -14,7 +14,7 @@ public class UserService {
     public void registrationUser(User user) {
         userRepository.save(user);
     }
-    
+
     public boolean duplicatedEmail(String email) {
         return userRepository.existsByEmail(email);
     }
