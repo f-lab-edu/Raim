@@ -42,4 +42,16 @@ public class SmsVerification {
         this.isVerified = isVerified;
         this.createdAt = createdAt;
     }
+
+    public boolean checkExpiration(LocalDateTime now) {
+        if (!now.isBefore(this.expirationTime)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean isVerified() {
+        return isVerified;
+    }
 }
