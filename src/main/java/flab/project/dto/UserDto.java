@@ -32,7 +32,7 @@ public class UserDto {
         return User.builder()
                 .email(userDto.getEmail())
                 .password(userDto.getPassword())
-                .name(userDto.getNickname())
+                .name(userDto.getName())
                 .phoneNumber(userDto.getPhoneNumber())
                 .nickname(userDto.getNickname())
                 .build();
