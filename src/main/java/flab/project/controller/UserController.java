@@ -26,7 +26,9 @@ public class UserController {
     @PostMapping
     public ResponseEntity<HttpStatus> registration(@RequestBody @Valid UserDto userDto) {
 
-        userService.registrationUser(UserDto.getUser(userDto));
+        if (!userService.registrationUser(UserDto.getUser(userDto))) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
 
         return ResponseEntity.ok().build();
     }
