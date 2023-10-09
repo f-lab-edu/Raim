@@ -23,6 +23,9 @@ public class UserService {
     private final SmsVerificationRepository smsVerificationRepository;
 
     public boolean registrationUser(User user) {
+        if (isRegistered(user)) {
+            return false;
+        }
 
         LocalDateTime now = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalDateTime();
 
@@ -96,5 +99,9 @@ public class UserService {
                 .build();
 
         emailVerificationRepository.save(emailVerification);
+    }
+
+    private boolean isRegistered(User user) {
+        return userRepository.existsByEmail(user.getEmail());
     }
 }
