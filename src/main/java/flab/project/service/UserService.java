@@ -3,6 +3,7 @@ package flab.project.service;
 import flab.project.domain.EmailVerification;
 import flab.project.domain.SmsVerification;
 import flab.project.domain.User;
+import flab.project.exception.*;
 import flab.project.repository.EmailVerificationRepository;
 import flab.project.repository.SmsVerificationRepository;
 import flab.project.repository.UserRepository;
@@ -22,47 +23,60 @@ public class UserService {
     private final EmailVerificationRepository emailVerificationRepository;
     private final SmsVerificationRepository smsVerificationRepository;
 
-    public boolean registrationUser(User user) {
+    public void registrationUser(User user) {
         if (isRegistered(user)) {
-            return false;
+            throw new UserExistsException(ExceptionCode.USER_EXIST);
         }
 
         LocalDateTime now = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalDateTime();
 
-        if (!checkEmailVerification(user.getEmail(), now) || !checkSmsVerification(user.getPhoneNumber(), now)) {
-            return false;
-        }
+        checkEmailVerification(user.getEmail(), now);
+        checkSmsVerification(user.getPhoneNumber(), now);
 
         userRepository.save(user);
-
-        return true;
     }
 
-    private boolean checkEmailVerification(String email, LocalDateTime now) {
-        EmailVerification findEmailVerification = emailVerificationRepository.findByEmail(email)
-                .orElseThrow(() ->  new NoSuchElementException());
-
-        if (!findEmailVerification.checkExpiration(now) || !findEmailVerification.isVerified()) {
-            return false;
-        }
-
-        return true;
+    public String findEmail(String phoneNumber) {
+        return userRepository.findByPhoneNumber(phoneNumber).map(findUser -> findUser.getEmail())
+                .orElseThrow(() -> new EmailNotFoundException(ExceptionCode.EMAIL_NOT_FOUND));
     }
 
-    private boolean checkSmsVerification(String phoneNumber, LocalDateTime now) {
-        SmsVerification findSmsVerification = smsVerificationRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new NoSuchElementException());
+    private void checkEmailVerification(String email, LocalDateTime now) {
+        emailVerificationRepository.findByEmail(email)
+                .filter(findVerification -> {
+                    if (!findVerification.checkExpiration(now)) {
+                        throw new VerificationException(ExceptionCode.EMAIL_EXPIRED_VERIFICATION);
+                    }
 
-        if (!findSmsVerification.checkExpiration(now) || !findSmsVerification.isVerified()) {
-            return false;
-        }
+                    if (!findVerification.isVerified()) {
+                        throw new VerificationException(ExceptionCode.EMAIL_UNVERIFIED_VERIFICATION);
+                    }
 
-        return true;
+                    return true;
+                })
+                .orElseThrow(() ->  new VerificationException(ExceptionCode.EMAIL_VERIFICATION_NOT_FOUND));
     }
 
-    public boolean duplicatedEmail(String email) {
+    private void checkSmsVerification(String phoneNumber, LocalDateTime now) {
+        smsVerificationRepository.findByPhoneNumber(phoneNumber)
+                .filter(findVerification -> {
+                    if (!findVerification.checkExpiration(now)) {
+                        throw new VerificationException(ExceptionCode.SMS_EXPIRED_VERIFICATION);
+                    }
+
+                    if (!findVerification.isVerified()) {
+                        throw new VerificationException(ExceptionCode.SMS_UNVERIFIED_VERIFICATION);
+                    }
+
+                    return true;
+                })
+                .orElseThrow(() -> new VerificationException(ExceptionCode.SMS_VERIFICATION_NOT_FOUND));
+
+    }
+
+    public void duplicatedEmail(String email) {
         if (userRepository.existsByEmail(email)) {
-            return true;
+            throw new DuplicateEmailException(ExceptionCode.DUPLICATED_EMAIL);
         }
 
         if (emailVerificationRepository.existsByEmail(email)) {
@@ -70,8 +84,6 @@ public class UserService {
         } else {
             createEmailVerification(email);
         }
-
-        return false;
     }
 
     private void updateEmailVerification(String email) {

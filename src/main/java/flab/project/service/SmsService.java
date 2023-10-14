@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import flab.project.domain.SmsVerification;
 import flab.project.dto.SmsRequestDto;
 import flab.project.dto.SmsResponseDto;
+import flab.project.exception.ExceptionCode;
+import flab.project.exception.VerificationException;
 import flab.project.repository.SmsVerificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.codec.binary.Base64;
@@ -44,7 +46,7 @@ public class SmsService {
 
     private final SmsVerificationRepository smsVerificationRepository;
 
-    public HttpStatusCode sendAuthenticationSms(String phoneNumber) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException, JsonProcessingException {
+    public HttpStatusCode sendAuthenticationSms(String phoneNumber) {
         long milliseconds = System.currentTimeMillis();
 
         //sms 확인을 위한 엔티티 생성 및 db에 저장
@@ -80,7 +82,7 @@ public class SmsService {
         return response;
     }
 
-    private HttpEntity<String> getRequestJson(String time, String phoneNumber, String verificationCode) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException, JsonProcessingException {
+    private HttpEntity<String> getRequestJson(String time, String phoneNumber, String verificationCode) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("x-ncp-apigw-timestamp", time);
@@ -100,11 +102,16 @@ public class SmsService {
                 .build();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        String body = objectMapper.writeValueAsString(sms);
+        String body = null;
+        try {
+            body = objectMapper.writeValueAsString(sms);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
 
         return new HttpEntity<>(body, headers);
     }
-    public String makeSignature(String time) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
+    public String makeSignature(String time) {
         String space = " ";
         String newLine = "\n";
         String method = "POST";
@@ -145,23 +152,22 @@ public class SmsService {
     }
 
     @Transactional
-    public boolean checkSmsCode(String phoneNumber, String code) {
+    public void checkSmsCode(String phoneNumber, String code) {
 
-        SmsVerification result = smsVerificationRepository.findByPhoneNumber(phoneNumber).orElseThrow(() -> new NoSuchElementException());
+        smsVerificationRepository.findByPhoneNumber(phoneNumber)
+                .filter(findVerification -> {
+                    if (!LocalDateTime.now().isBefore(findVerification.getExpirationTime())) {
+                        throw new VerificationException(ExceptionCode.SMS_EXPIRED_VERIFICATION);
+                    }
 
-        //기간이 만료되었는지 확인
-        if (!LocalDateTime.now().isBefore(result.getExpirationTime())) {
-            throw new IllegalArgumentException();
-        }
+                    if (!findVerification.getVerificationCode().equals(code)) {
+                        throw new VerificationException(ExceptionCode.SMS_CODE_NOT_MATCH);
+                    }
 
-        //코드가 맞는지 확인
-        if (!result.getVerificationCode().equals(code)) {
-            return false;
-        }
+                    findVerification.successVerification();
+                    smsVerificationRepository.save(findVerification);
 
-        result.successVerification();
-        smsVerificationRepository.save(result);
-
-        return true;
+                    return true;
+                }).orElseThrow(() -> new VerificationException(ExceptionCode.SMS_VERIFICATION_NOT_FOUND));
     }
 }

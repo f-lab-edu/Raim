@@ -1,6 +1,7 @@
 package flab.project.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import flab.project.dto.CommonResponseDto;
 import flab.project.dto.UserDto;
 import flab.project.service.SmsService;
 import flab.project.service.UserService;
@@ -26,9 +27,7 @@ public class UserController {
     @PostMapping
     public ResponseEntity<HttpStatus> registration(@RequestBody @Valid UserDto userDto) {
 
-        if (!userService.registrationUser(UserDto.getUser(userDto))) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
+        userService.registrationUser(UserDto.getUser(userDto));
 
         return ResponseEntity.ok().build();
     }
@@ -36,15 +35,20 @@ public class UserController {
     @GetMapping("/duplicated/{email}")
     public ResponseEntity<HttpStatus> duplicatedEmail(@PathVariable String email) {
 
-        if (userService.duplicatedEmail(email)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
+        userService.duplicatedEmail(email);
 
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/find")
+    public ResponseEntity<CommonResponseDto<String>> findEmail(@RequestParam("phoneNumber") String phoneNumber) {
+        String email = userService.findEmail(phoneNumber);
+
+        return ResponseEntity.ok(CommonResponseDto.of(HttpStatus.OK.value(), "", email));
+    }
+
     @GetMapping("/{phoneNumber}")
-    public ResponseEntity<HttpStatus> sendSmsCode(@PathVariable String phoneNumber) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException, JsonProcessingException {
+    public ResponseEntity<HttpStatus> sendSmsCode(@PathVariable String phoneNumber) {
         HttpStatusCode httpStatusCode = smsService.sendAuthenticationSms(phoneNumber);
 
         if (!httpStatusCode.is2xxSuccessful()) {
@@ -58,9 +62,7 @@ public class UserController {
     public ResponseEntity<HttpStatus> checkSmsCode(@PathVariable String phoneNumber,
                                                    @PathVariable String code) {
 
-        if (!smsService.checkSmsCode(phoneNumber, code)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
+        smsService.checkSmsCode(phoneNumber, code);
 
         return ResponseEntity.ok().build();
     }
