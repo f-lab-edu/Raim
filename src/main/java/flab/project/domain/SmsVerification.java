@@ -34,10 +34,6 @@ public class SmsVerification {
     public void successVerification() {
         this.isVerified = true;
     }
-
-    /*
-        TODO: 완료된 코드는 완료처리를 해야합니다.
-     */
     @Builder
     public SmsVerification(String phoneNumber, String verificationCode, LocalDateTime expirationTime, boolean isVerified, LocalDateTime createdAt) {
         this.phoneNumber = phoneNumber;

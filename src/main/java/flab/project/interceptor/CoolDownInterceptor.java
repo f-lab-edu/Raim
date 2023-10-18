@@ -9,9 +9,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/*
-    TODO: 인터셉터를 DB에 저장하는 방식으로 변경.
- */
 @Component
 public class CoolDownInterceptor implements HandlerInterceptor {
 

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import flab.project.domain.SmsVerification;
 import flab.project.dto.SmsRequestDto;
 import flab.project.dto.SmsResponseDto;
-import flab.project.exception.APIException;
 import flab.project.exception.ExceptionCode;
 import flab.project.exception.VerificationException;
 import flab.project.repository.SmsVerificationRepository;
@@ -47,7 +46,7 @@ public class SmsService {
 
     private final SmsVerificationRepository smsVerificationRepository;
 
-    public void sendAuthenticationSms(String phoneNumber) {
+    public HttpStatusCode sendAuthenticationSms(String phoneNumber) {
         long milliseconds = System.currentTimeMillis();
 
         //sms 확인을 위한 엔티티 생성 및 db에 저장
@@ -70,22 +69,17 @@ public class SmsService {
         HttpEntity<String> json = getRequestJson(Long.toString(milliseconds), phoneNumber, verificationCode);
 
         //api 요청
-        sendSmsApi(json);
+        ResponseEntity<SmsResponseDto> response = sendSmsApi(json);
+
+        return response.getStatusCode();
     }
 
-    private String deleteDashPhoneNumber(String phoneNumber) {
-        return phoneNumber.replace("-", "");
-    }
-
-    private void sendSmsApi(HttpEntity<String> json) {
+    private ResponseEntity<SmsResponseDto> sendSmsApi(HttpEntity<String> json) {
         RestTemplate restTemplate = new RestTemplate();
 
         String uri = "https://sens.apigw.ntruss.com/sms/v2/services/" + serviceId + "/messages";
         ResponseEntity<SmsResponseDto> response = restTemplate.postForEntity(uri, json, SmsResponseDto.class);
-
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new APIException(ExceptionCode.API_FAIL);
-        }
+        return response;
     }
 
     private HttpEntity<String> getRequestJson(String time, String phoneNumber, String verificationCode) {
@@ -96,7 +90,7 @@ public class SmsService {
         headers.set("x-ncp-apigw-signature-v2", makeSignature(time));
 
         List<SmsRequestDto.MessageDto> messages = new ArrayList<>();
-        messages.add(SmsRequestDto.MessageDto.builder().to(deleteDashPhoneNumber(phoneNumber)).build());
+        messages.add(SmsRequestDto.MessageDto.builder().to(phoneNumber).build());
 
         SmsRequestDto sms = SmsRequestDto.builder()
                 .type("SMS")
@@ -109,11 +103,10 @@ public class SmsService {
 
         ObjectMapper objectMapper = new ObjectMapper();
         String body = null;
-
         try {
             body = objectMapper.writeValueAsString(sms);
         } catch (JsonProcessingException e) {
-            throw new APIException(ExceptionCode.API_FAIL);
+            throw new RuntimeException(e);
         }
 
         return new HttpEntity<>(body, headers);
@@ -137,23 +130,11 @@ public class SmsService {
                 .append(accessKey)
                 .toString();
 
-        SecretKeySpec signingKey = null;
-        Mac mac = null;
-        try {
-            signingKey = new SecretKeySpec(secretKey.getBytes("UTF-8"), "HmacSHA256");
-            mac = Mac.getInstance("HmacSHA256");
-            mac.init(signingKey);
-        } catch (UnsupportedEncodingException | NoSuchAlgorithmException | InvalidKeyException e) {
-            throw new APIException(ExceptionCode.API_FAIL);
-        }
+        SecretKeySpec signingKey = new SecretKeySpec(secretKey.getBytes("UTF-8"), "HmacSHA256");
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(signingKey);
 
-        byte[] rawHmac = new byte[0];
-        try {
-            rawHmac = mac.doFinal(message.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new APIException(ExceptionCode.API_FAIL);
-        }
-
+        byte[] rawHmac = mac.doFinal(message.getBytes("UTF-8"));
         String encodeBase64String = Base64.encodeBase64String(rawHmac);
 
         return encodeBase64String;

@@ -7,11 +7,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-
-/*
-    TODO: 스케줄러는 batch 서비스로 바꿔야 한다.
- */
-
 @Component
 @RequiredArgsConstructor
 public class VerificationScheduler {
