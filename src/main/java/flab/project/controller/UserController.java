@@ -1,20 +1,19 @@
 package flab.project.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import flab.project.domain.RequestHistory;
 import flab.project.dto.CommonResponseDto;
+import flab.project.dto.EmailResponseDto;
 import flab.project.dto.UserDto;
+import flab.project.service.RequestHistoryService;
 import flab.project.service.SmsService;
 import flab.project.service.UserService;
-import jakarta.validation.Valid;
+import flab.project.util.ValidationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import static flab.project.util.ValidationUtils.validatePhoneNumber;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,9 +22,15 @@ public class UserController {
 
     private final UserService userService;
     private final SmsService smsService;
+    private final RequestHistoryService requestHistoryService;
 
+    /**
+     *
+     * TODO: 인증이 처리된 verification들 제거해야 함.
+     */
     @PostMapping
-    public ResponseEntity<HttpStatus> registration(@RequestBody @Valid UserDto userDto) {
+    public ResponseEntity<HttpStatus> registration(@RequestBody UserDto userDto) {
+        UserDto.validUserDto(userDto);
 
         userService.registrationUser(UserDto.getUser(userDto));
 
@@ -34,6 +39,7 @@ public class UserController {
 
     @GetMapping("/duplicated/{email}")
     public ResponseEntity<HttpStatus> duplicatedEmail(@PathVariable String email) {
+        ValidationUtils.validateEmail(email);
 
         userService.duplicatedEmail(email);
 
@@ -41,19 +47,19 @@ public class UserController {
     }
 
     @GetMapping("/find")
-    public ResponseEntity<CommonResponseDto<String>> findEmail(@RequestParam("phoneNumber") String phoneNumber) {
+    public ResponseEntity<CommonResponseDto<EmailResponseDto>> findEmail(@RequestParam("phoneNumber") String phoneNumber) {
+        validatePhoneNumber(phoneNumber);
+
         String email = userService.findEmail(phoneNumber);
 
-        return ResponseEntity.ok(CommonResponseDto.of(HttpStatus.OK.value(), "", email));
+        return ResponseEntity.ok(CommonResponseDto.of(HttpStatus.OK.value(), "", EmailResponseDto.of(email)));
     }
 
     @GetMapping("/{phoneNumber}")
     public ResponseEntity<HttpStatus> sendSmsCode(@PathVariable String phoneNumber) {
-        HttpStatusCode httpStatusCode = smsService.sendAuthenticationSms(phoneNumber);
+        validatePhoneNumber(phoneNumber);
 
-        if (!httpStatusCode.is2xxSuccessful()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
+        smsService.sendAuthenticationSms(phoneNumber);
 
         return ResponseEntity.ok().build();
     }
@@ -61,6 +67,7 @@ public class UserController {
     @GetMapping("/{phoneNumber}/{code}")
     public ResponseEntity<HttpStatus> checkSmsCode(@PathVariable String phoneNumber,
                                                    @PathVariable String code) {
+        validatePhoneNumber(phoneNumber);
 
         smsService.checkSmsCode(phoneNumber, code);
 
