@@ -1,7 +1,6 @@
 package flab.project.service;
 
 import flab.project.domain.EmailVerification;
-import flab.project.domain.SmsVerification;
 import flab.project.domain.User;
 import flab.project.exception.*;
 import flab.project.repository.EmailVerificationRepository;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor

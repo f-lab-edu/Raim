@@ -19,7 +19,15 @@ public enum ExceptionCode {
     EMAIL_UNVERIFIED_VERIFICATION(HttpStatus.FORBIDDEN, "이메일 인증이 필요합니다."),
     SMS_EXPIRED_VERIFICATION(HttpStatus.UNAUTHORIZED, "SMS 인증 유효기간이 지났습니다."),
     SMS_UNVERIFIED_VERIFICATION(HttpStatus.FORBIDDEN, "SMS 인증이 필요합니다."),
-    SMS_CODE_NOT_MATCH(HttpStatus.UNAUTHORIZED, "인증번호가 틀렸습니다.");
+    SMS_CODE_NOT_MATCH(HttpStatus.UNAUTHORIZED, "인증번호가 틀렸습니다."),
+
+    EMAIL_VALIDATION(HttpStatus.BAD_REQUEST, "이메일 형식이 맞지 않습니다."),
+    PASSWORD_VALIDATION(HttpStatus.BAD_REQUEST, "비밀번호 형식이 맞지 않습니다."),
+    NAME_VALIDATION(HttpStatus.BAD_REQUEST, "이름 형식이 맞지 않습니다."),
+    PHONE_NUMBER_VALIDATION(HttpStatus.BAD_REQUEST, "휴대전화 형식이 맞지 않습니다."),
+    PASSWORD_CONFIRM(HttpStatus.BAD_REQUEST, "비밀번호와 확인 비밀번호가 일치하지 않습니다."),
+
+    API_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "외부 API를 처리하지 못했습니다.");
 
     private final HttpStatus status;
 
