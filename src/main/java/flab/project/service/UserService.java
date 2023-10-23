@@ -1,6 +1,7 @@
 package flab.project.service;
 
 import flab.project.domain.EmailVerification;
+import flab.project.domain.SmsVerification;
 import flab.project.domain.User;
 import flab.project.exception.*;
 import flab.project.repository.EmailVerificationRepository;
@@ -8,6 +9,7 @@ import flab.project.repository.SmsVerificationRepository;
 import flab.project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -17,10 +19,12 @@ import java.time.ZoneId;
 @RequiredArgsConstructor
 public class UserService {
 
+    private final RequestHistoryService requestHistoryService;
     private final UserRepository userRepository;
     private final EmailVerificationRepository emailVerificationRepository;
     private final SmsVerificationRepository smsVerificationRepository;
 
+    @Transactional
     public void registrationUser(User user) {
         if (isRegistered(user)) {
             throw new UserExistsException(ExceptionCode.USER_EXIST);
@@ -32,6 +36,13 @@ public class UserService {
         checkSmsVerification(user.getPhoneNumber(), now);
 
         userRepository.save(user);
+
+        cleanVerification(user);
+    }
+
+    private void cleanVerification(User user) {
+        emailVerificationRepository.deleteByEmail(user.getEmail());
+        smsVerificationRepository.deleteByPhoneNumber(user.getPhoneNumber());
     }
 
     public String findEmail(String phoneNumber) {
@@ -40,36 +51,29 @@ public class UserService {
     }
 
     private void checkEmailVerification(String email, LocalDateTime now) {
-        emailVerificationRepository.findByEmail(email)
-                .filter(findVerification -> {
-                    if (!findVerification.checkExpiration(now)) {
-                        throw new VerificationException(ExceptionCode.EMAIL_EXPIRED_VERIFICATION);
-                    }
+        EmailVerification findVerification = emailVerificationRepository.findByEmail(email)
+                .orElseThrow(() -> new VerificationException(ExceptionCode.EMAIL_VERIFICATION_NOT_FOUND));
 
-                    if (!findVerification.isVerified()) {
-                        throw new VerificationException(ExceptionCode.EMAIL_UNVERIFIED_VERIFICATION);
-                    }
+        if (!findVerification.checkExpiration(now)) {
+            throw new VerificationException(ExceptionCode.EMAIL_EXPIRED_VERIFICATION);
+        }
 
-                    return true;
-                })
-                .orElseThrow(() ->  new VerificationException(ExceptionCode.EMAIL_VERIFICATION_NOT_FOUND));
+        if (!findVerification.isVerified()) {
+            throw new VerificationException(ExceptionCode.EMAIL_UNVERIFIED_VERIFICATION);
+        }
     }
 
     private void checkSmsVerification(String phoneNumber, LocalDateTime now) {
-        smsVerificationRepository.findByPhoneNumber(phoneNumber)
-                .filter(findVerification -> {
-                    if (!findVerification.checkExpiration(now)) {
-                        throw new VerificationException(ExceptionCode.SMS_EXPIRED_VERIFICATION);
-                    }
-
-                    if (!findVerification.isVerified()) {
-                        throw new VerificationException(ExceptionCode.SMS_UNVERIFIED_VERIFICATION);
-                    }
-
-                    return true;
-                })
+        SmsVerification findVerification = smsVerificationRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new VerificationException(ExceptionCode.SMS_VERIFICATION_NOT_FOUND));
 
+        if (!findVerification.checkExpiration(now)) {
+            throw new VerificationException(ExceptionCode.SMS_EXPIRED_VERIFICATION);
+        }
+
+        if (!findVerification.isVerified()) {
+            throw new VerificationException(ExceptionCode.SMS_UNVERIFIED_VERIFICATION);
+        }
     }
 
     public void duplicatedEmail(String email) {
@@ -85,7 +89,7 @@ public class UserService {
     }
 
     private void updateEmailVerification(String email) {
-        EmailVerification findEmail = emailVerificationRepository.findByEmail(email).get();
+        EmailVerification findEmail = emailVerificationRepository.findByEmail(email).orElseGet(() -> EmailVerification.builder().build());
 
         Long milliseconds = System.currentTimeMillis();
         LocalDateTime createdAt = Instant.ofEpochMilli(milliseconds).atZone(ZoneId.systemDefault()).toLocalDateTime();
