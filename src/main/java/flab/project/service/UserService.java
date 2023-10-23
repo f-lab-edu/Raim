@@ -3,7 +3,8 @@ package flab.project.service;
 import flab.project.domain.EmailVerification;
 import flab.project.domain.SmsVerification;
 import flab.project.domain.User;
-import flab.project.exception.*;
+import flab.project.exception.ExceptionCode;
+import flab.project.exception.KakaoException;
 import flab.project.repository.EmailVerificationRepository;
 import flab.project.repository.SmsVerificationRepository;
 import flab.project.repository.UserRepository;
@@ -27,7 +28,7 @@ public class UserService {
     @Transactional
     public void registrationUser(User user) {
         if (isRegistered(user)) {
-            throw new UserExistsException(ExceptionCode.USER_EXIST);
+            throw new KakaoException(ExceptionCode.USER_EXIST);
         }
 
         LocalDateTime now = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalDateTime();
@@ -47,38 +48,38 @@ public class UserService {
 
     public String findEmail(String phoneNumber) {
         return userRepository.findByPhoneNumber(phoneNumber).map(findUser -> findUser.getEmail())
-                .orElseThrow(() -> new EmailNotFoundException(ExceptionCode.EMAIL_NOT_FOUND));
+                .orElseThrow(() -> new KakaoException(ExceptionCode.EMAIL_NOT_FOUND));
     }
 
     private void checkEmailVerification(String email, LocalDateTime now) {
         EmailVerification findVerification = emailVerificationRepository.findByEmail(email)
-                .orElseThrow(() -> new VerificationException(ExceptionCode.EMAIL_VERIFICATION_NOT_FOUND));
+                .orElseThrow(() -> new KakaoException(ExceptionCode.EMAIL_VERIFICATION_NOT_FOUND));
 
         if (!findVerification.checkExpiration(now)) {
-            throw new VerificationException(ExceptionCode.EMAIL_EXPIRED_VERIFICATION);
+            throw new KakaoException(ExceptionCode.EMAIL_EXPIRED_VERIFICATION);
         }
 
         if (!findVerification.isVerified()) {
-            throw new VerificationException(ExceptionCode.EMAIL_UNVERIFIED_VERIFICATION);
+            throw new KakaoException(ExceptionCode.EMAIL_UNVERIFIED_VERIFICATION);
         }
     }
 
     private void checkSmsVerification(String phoneNumber, LocalDateTime now) {
         SmsVerification findVerification = smsVerificationRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new VerificationException(ExceptionCode.SMS_VERIFICATION_NOT_FOUND));
+                .orElseThrow(() -> new KakaoException(ExceptionCode.SMS_VERIFICATION_NOT_FOUND));
 
         if (!findVerification.checkExpiration(now)) {
-            throw new VerificationException(ExceptionCode.SMS_EXPIRED_VERIFICATION);
+            throw new KakaoException(ExceptionCode.SMS_EXPIRED_VERIFICATION);
         }
 
         if (!findVerification.isVerified()) {
-            throw new VerificationException(ExceptionCode.SMS_UNVERIFIED_VERIFICATION);
+            throw new KakaoException(ExceptionCode.SMS_UNVERIFIED_VERIFICATION);
         }
     }
 
     public void duplicatedEmail(String email) {
         if (userRepository.existsByEmail(email)) {
-            throw new DuplicateEmailException(ExceptionCode.DUPLICATED_EMAIL);
+            throw new KakaoException(ExceptionCode.DUPLICATED_EMAIL);
         }
 
         if (emailVerificationRepository.existsByEmail(email)) {

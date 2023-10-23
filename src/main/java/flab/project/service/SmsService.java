@@ -1,16 +1,12 @@
 package flab.project.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import flab.project.domain.SmsVerification;
 import flab.project.dto.SmsRequestDto;
 import flab.project.dto.SmsResponseDto;
-import flab.project.exception.APIException;
 import flab.project.exception.ExceptionCode;
-import flab.project.exception.VerificationException;
+import flab.project.exception.KakaoException;
 import flab.project.feign.SmsFeignClient;
 import flab.project.repository.SmsVerificationRepository;
-import flab.project.util.ObjectMapperUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +14,6 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -102,7 +97,7 @@ public class SmsService {
         ResponseEntity<SmsResponseDto> response = smsFeignClient.sendSms(serviceId, time, accessKey, makeSignature(time), smsRequestDto);
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new APIException(ExceptionCode.API_FAIL);
+            throw new KakaoException(ExceptionCode.API_FAIL);
         }
 
     }
@@ -133,14 +128,14 @@ public class SmsService {
             mac = Mac.getInstance("HmacSHA256");
             mac.init(signingKey);
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException | InvalidKeyException e) {
-            throw new APIException(ExceptionCode.API_FAIL);
+            throw new KakaoException(ExceptionCode.API_FAIL);
         }
 
         byte[] rawHmac = new byte[0];
         try {
             rawHmac = mac.doFinal(message.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
-            throw new APIException(ExceptionCode.API_FAIL);
+            throw new KakaoException(ExceptionCode.API_FAIL);
         }
 
         String encodeBase64String = Base64.encodeBase64String(rawHmac);
@@ -165,17 +160,17 @@ public class SmsService {
         smsVerificationRepository.findByPhoneNumber(phoneNumber)
                 .filter(findVerification -> {
                     if (!LocalDateTime.now().isBefore(findVerification.getExpirationTime())) {
-                        throw new VerificationException(ExceptionCode.SMS_EXPIRED_VERIFICATION);
+                        throw new KakaoException(ExceptionCode.SMS_EXPIRED_VERIFICATION);
                     }
 
                     if (!findVerification.getVerificationCode().equals(code)) {
-                        throw new VerificationException(ExceptionCode.SMS_CODE_NOT_MATCH);
+                        throw new KakaoException(ExceptionCode.SMS_CODE_NOT_MATCH);
                     }
 
                     findVerification.successVerification();
                     smsVerificationRepository.save(findVerification);
 
                     return true;
-                }).orElseThrow(() -> new VerificationException(ExceptionCode.SMS_VERIFICATION_NOT_FOUND));
+                }).orElseThrow(() -> new KakaoException(ExceptionCode.SMS_VERIFICATION_NOT_FOUND));
     }
 }

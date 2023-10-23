@@ -1,8 +1,8 @@
 package flab.project.util;
 
-import flab.project.exception.DtoValidateException;
 import flab.project.exception.ExceptionCode;
 
+import flab.project.exception.KakaoException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,7 +20,7 @@ public class ValidationUtils {
         Matcher matcher = emailPattern.matcher(email);
 
         if (!matcher.matches()) {
-            throw new DtoValidateException(ExceptionCode.EMAIL_VALIDATION);
+            throw new KakaoException(ExceptionCode.EMAIL_VALIDATION);
         }
     }
 
@@ -28,7 +28,7 @@ public class ValidationUtils {
         Matcher matcher = passwordPattern.matcher(password);
 
         if (!matcher.matches()) {
-            throw new DtoValidateException(ExceptionCode.PASSWORD_VALIDATION);
+            throw new KakaoException(ExceptionCode.PASSWORD_VALIDATION);
         }
     }
 
@@ -36,7 +36,7 @@ public class ValidationUtils {
         Matcher matcher = namePattern.matcher(name);
 
         if (!matcher.matches()) {
-            throw new DtoValidateException(ExceptionCode.NAME_VALIDATION);
+            throw new KakaoException(ExceptionCode.NAME_VALIDATION);
         }
     }
 
@@ -44,12 +44,12 @@ public class ValidationUtils {
         Matcher matcher = phoneNumberPattern.matcher(phoneNumber);
 
         if (!matcher.matches()) {
-            throw new DtoValidateException(ExceptionCode.PHONE_NUMBER_VALIDATION);
+            throw new KakaoException(ExceptionCode.PHONE_NUMBER_VALIDATION);
         }
     }
     public static void confirmPassword(String password, String confirmPassword) {
         if (!password.equals(confirmPassword)) {
-            throw new DtoValidateException(ExceptionCode.PASSWORD_CONFIRM);
+            throw new KakaoException(ExceptionCode.PASSWORD_CONFIRM);
         }
     }
 }
