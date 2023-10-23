@@ -8,7 +8,9 @@ import flab.project.dto.SmsResponseDto;
 import flab.project.exception.APIException;
 import flab.project.exception.ExceptionCode;
 import flab.project.exception.VerificationException;
+import flab.project.feign.SmsFeignClient;
 import flab.project.repository.SmsVerificationRepository;
+import flab.project.util.ObjectMapperUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,13 +48,19 @@ public class SmsService {
     private String from;
 
     private final SmsVerificationRepository smsVerificationRepository;
+    private final SmsFeignClient smsFeignClient;
+
+    /**
+     * TODO: 재요청 시 update 해야 한다.
+     */
 
     public void sendAuthenticationSms(String phoneNumber) {
         long milliseconds = System.currentTimeMillis();
 
         //sms 확인을 위한 엔티티 생성 및 db에 저장
         LocalDateTime createdAt = Instant.ofEpochMilli(milliseconds).atZone(ZoneId.systemDefault()).toLocalDateTime();
-        LocalDateTime expirationTime = Instant.ofEpochMilli((milliseconds + 300000)).atZone(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime expirationTime = Instant.ofEpochMilli((milliseconds + 300000)).atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
 
         String verificationCode = makeRandomMessage();
 
@@ -64,41 +72,17 @@ public class SmsService {
                 .createdAt(createdAt)
                 .build();
 
+        SmsRequestDto sms = makeSms(phoneNumber, verificationCode);
+        sendSmsApi(Long.toString(milliseconds), sms);
+
         smsVerificationRepository.save(smsVerification);
-
-        //api 요청에 맞는 json 생성
-        HttpEntity<String> json = getRequestJson(Long.toString(milliseconds), phoneNumber, verificationCode);
-
-        //api 요청
-        sendSmsApi(json);
     }
 
-    private String deleteDashPhoneNumber(String phoneNumber) {
-        return phoneNumber.replace("-", "");
-    }
-
-    private void sendSmsApi(HttpEntity<String> json) {
-        RestTemplate restTemplate = new RestTemplate();
-
-        String uri = "https://sens.apigw.ntruss.com/sms/v2/services/" + serviceId + "/messages";
-        ResponseEntity<SmsResponseDto> response = restTemplate.postForEntity(uri, json, SmsResponseDto.class);
-
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new APIException(ExceptionCode.API_FAIL);
-        }
-    }
-
-    private HttpEntity<String> getRequestJson(String time, String phoneNumber, String verificationCode) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("x-ncp-apigw-timestamp", time);
-        headers.set("x-ncp-iam-access-key", accessKey);
-        headers.set("x-ncp-apigw-signature-v2", makeSignature(time));
-
+    private SmsRequestDto makeSms(String phoneNumber, String verificationCode) {
         List<SmsRequestDto.MessageDto> messages = new ArrayList<>();
         messages.add(SmsRequestDto.MessageDto.builder().to(deleteDashPhoneNumber(phoneNumber)).build());
 
-        SmsRequestDto sms = SmsRequestDto.builder()
+        return SmsRequestDto.builder()
                 .type("SMS")
                 .contentType("COMM")
                 .countryCode("82")
@@ -106,18 +90,23 @@ public class SmsService {
                 .content("sms 본인인증 번호는 [" + verificationCode + "] 입니다.")
                 .messages(messages)
                 .build();
+    }
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String body = null;
+    private String deleteDashPhoneNumber(String phoneNumber) {
+        return phoneNumber.replace("-", "");
+    }
 
-        try {
-            body = objectMapper.writeValueAsString(sms);
-        } catch (JsonProcessingException e) {
+    private void sendSmsApi(String time, SmsRequestDto smsRequestDto) {
+
+        /* sendSms의 ErrorResponse 처리하는 법 */
+        ResponseEntity<SmsResponseDto> response = smsFeignClient.sendSms(serviceId, time, accessKey, makeSignature(time), smsRequestDto);
+
+        if (!response.getStatusCode().is2xxSuccessful()) {
             throw new APIException(ExceptionCode.API_FAIL);
         }
 
-        return new HttpEntity<>(body, headers);
     }
+
     public String makeSignature(String time) {
         String space = " ";
         String newLine = "\n";
