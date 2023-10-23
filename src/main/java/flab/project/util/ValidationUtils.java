@@ -7,11 +7,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ValidationUtils {
-    public static void validateEmail(String email) {
-        final String EMAIL_REGEX = "(\\w\\.)*\\w+@(\\w+\\.)+[A-Za-z]{2,3}";
+    private static final Pattern emailPattern = Pattern.compile("(\\w\\.)*\\w+@(\\w+\\.)+[A-Za-z]{2,3}");
+    private static final Pattern passwordPattern = Pattern.compile("^(?=.*[A-Za-z])(?=.*[!@#$%^&*()-_+=])(?=.*\\d).{8,20}$");
+    private static final Pattern namePattern = Pattern.compile("^[A-Za-zㄱ-힣]{2,10}$");
+    private static final Pattern phoneNumberPattern = Pattern.compile("^01([0|1|6|7|8|9])-(\\d{3}|\\d{4})-\\d{4}$");
 
-        Pattern pattern = Pattern.compile(EMAIL_REGEX);
-        Matcher matcher = pattern.matcher(email);
+    private ValidationUtils() {
+        throw new RuntimeException("Do Not Create");
+    }
+
+    public static void validateEmail(String email) {
+        Matcher matcher = emailPattern.matcher(email);
 
         if (!matcher.matches()) {
             throw new DtoValidateException(ExceptionCode.EMAIL_VALIDATION);
@@ -19,10 +25,7 @@ public class ValidationUtils {
     }
 
     public static void validatePassword(String password) {
-        final String PASSWORD_REGEX = "^(?=.*[A-Za-z])(?=.*[!@#$%^&*()-_+=])(?=.*\\d).{8,20}$";
-
-        Pattern pattern = Pattern.compile(PASSWORD_REGEX);
-        Matcher matcher = pattern.matcher(password);
+        Matcher matcher = passwordPattern.matcher(password);
 
         if (!matcher.matches()) {
             throw new DtoValidateException(ExceptionCode.PASSWORD_VALIDATION);
@@ -30,10 +33,7 @@ public class ValidationUtils {
     }
 
     public static void validateName(String name) {
-        final String NAME_REGEX = "^[A-Za-zㄱ-힣]{2,10}$";
-
-        Pattern pattern = Pattern.compile(NAME_REGEX);
-        Matcher matcher = pattern.matcher(name);
+        Matcher matcher = namePattern.matcher(name);
 
         if (!matcher.matches()) {
             throw new DtoValidateException(ExceptionCode.NAME_VALIDATION);
@@ -41,10 +41,7 @@ public class ValidationUtils {
     }
 
     public static void validatePhoneNumber(String phoneNumber) {
-        final String PHONE_NUMBER_REGEX = "^01([0|1|6|7|8|9])-(\\d{3}|\\d{4})-\\d{4}$";
-
-        Pattern pattern = Pattern.compile(PHONE_NUMBER_REGEX);
-        Matcher matcher = pattern.matcher(phoneNumber);
+        Matcher matcher = phoneNumberPattern.matcher(phoneNumber);
 
         if (!matcher.matches()) {
             throw new DtoValidateException(ExceptionCode.PHONE_NUMBER_VALIDATION);
