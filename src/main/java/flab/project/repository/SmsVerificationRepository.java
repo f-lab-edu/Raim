@@ -12,4 +12,5 @@ public interface SmsVerificationRepository extends JpaRepository<SmsVerification
 
     Optional<SmsVerification> findByPhoneNumber(String phoneNumber);
     void deleteByExpirationTimeBefore(LocalDateTime referenceTime);
+    void deleteByPhoneNumber(String phoneNumber);
 }
