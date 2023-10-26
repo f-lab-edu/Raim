@@ -58,8 +58,8 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "중복된 메일 없음."),
             @ApiResponse(responseCode = "400", description = "이메일 형식이 아닙니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @GetMapping("/duplicated/{email}")
-    public void duplicatedEmail(
+    @GetMapping("/available/{email}")
+    public void availableEmail(
             @PathVariable
             @Parameter(description = "이메일", in = ParameterIn.PATH, example = "asd123@asd.com") String email) {
         validateEmail(email);
@@ -69,8 +69,7 @@ public class UserController {
 
     @Operation(summary = "이메일 찾기", description = "휴대전화 번호로 가입된 이메일을 찾습니다.")
     @ApiResponses(value = {
-            /* CommonResponseDto<EmailResponseDto>를 표현하지 못하는 문제 */
-            @ApiResponse(responseCode = "200", description = "이메일을 찾았습니다.", content = @Content(schema = @Schema(implementation = CommonResponseDto.class))),
+            @ApiResponse(responseCode = "200", description = "이메일을 찾았습니다."),
             @ApiResponse(responseCode = "400", description = "휴대전화 형식이 아닙니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "가입된 이메일이 없습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
