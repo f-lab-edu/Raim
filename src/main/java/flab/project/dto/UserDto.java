@@ -16,26 +16,26 @@ public class UserDto {
 
     @NotEmpty
     @Email
-    @Schema(name = "User 이메일", example = "asd123@asd.com", requiredMode = RequiredMode.REQUIRED)
+    @Schema(name = "email", description = "User 이메일", example = "asd123@asd.com", requiredMode = RequiredMode.REQUIRED)
     private String email;
 
     @NotEmpty
-    @Schema(name = "User 비밀번호", example = "asdf1234!", requiredMode = RequiredMode.REQUIRED)
+    @Schema(name = "password", description = "User 비밀번호", example = "asdf1234!", requiredMode = RequiredMode.REQUIRED)
     private String password;
 
     @NotEmpty
-    @Schema(name = "User 비밀번호 확인", example = "asdf1234!", requiredMode = RequiredMode.REQUIRED)
+    @Schema(name = "confirmPassword", description = "User 비밀번호 확인", example = "asdf1234!", requiredMode = RequiredMode.REQUIRED)
     private String confirmPassword;
 
     @NotEmpty
-    @Schema(name = "User 이름", example = "김개발", requiredMode = RequiredMode.REQUIRED)
+    @Schema(name = "name", description = "User 이름", example = "김개발", requiredMode = RequiredMode.REQUIRED)
     private String name;
 
     @NotEmpty
-    @Schema(name = "User 휴대전화", example = "010-1234-5678", requiredMode = RequiredMode.REQUIRED)
+    @Schema(name = "phoneNumber", description = "User 휴대전화", example = "010-1234-5678", requiredMode = RequiredMode.REQUIRED)
     private String phoneNumber;
 
-    @Schema(name = "User 닉네임", example = "개발남")
+    @Schema(name = "nickname", description = "User 닉네임", example = "개발남")
     private String nickname;
 
     public static User createUser(UserDto userDto) {
