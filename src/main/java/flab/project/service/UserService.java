@@ -9,6 +9,7 @@ import flab.project.repository.EmailVerificationRepository;
 import flab.project.repository.SmsVerificationRepository;
 import flab.project.repository.UserRepository;
 import flab.project.util.EncryptionUtils;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +30,7 @@ public class UserService {
     @Transactional
     public void registrationUser(User user, String emailVerification, String smsVerification) {
         if (isRegistered(user)) {
-            throw new KakaoException(ExceptionCode.USER_EXIST);
+            throw new KakaoException(ExceptionCode.USER_EXIST, Map.of("Email", user.getEmail(), "Name", user.getName(), "PhoneNumber", user.getPhoneNumber()));
         }
 
         LocalDateTime now = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalDateTime();
