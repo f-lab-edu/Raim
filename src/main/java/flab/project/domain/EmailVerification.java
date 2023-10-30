@@ -16,7 +16,11 @@ public class EmailVerification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String email;
+
+    @Column(nullable = false)
+    private String emailEncryptKey;
 
     @Column(nullable = false)
     private boolean isVerified;
@@ -28,8 +32,9 @@ public class EmailVerification {
     private LocalDateTime expirationTime;
 
     @Builder
-    public EmailVerification(String email, boolean isVerified, LocalDateTime createdAt, LocalDateTime expirationTime) {
+    public EmailVerification(String email, String emailEncryptKey, boolean isVerified, LocalDateTime createdAt, LocalDateTime expirationTime) {
         this.email = email;
+        this.emailEncryptKey = emailEncryptKey;
         this.isVerified = isVerified;
         this.createdAt = createdAt;
         this.expirationTime = expirationTime;
