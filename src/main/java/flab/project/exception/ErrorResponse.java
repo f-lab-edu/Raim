@@ -5,16 +5,16 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public class ErrorResponse {
-    private int status;
+    private int code;
     private String message;
 
-    private ErrorResponse(int status, String message) {
-        this.status = status;
+    private ErrorResponse(int code, String message) {
+        this.code = code;
         this.message = message;
     }
 
     public static ErrorResponse of(ExceptionCode exceptionCode) {
-        return new ErrorResponse(exceptionCode.getStatus().value(), exceptionCode.getMessage());
+        return new ErrorResponse(exceptionCode.getCode(), exceptionCode.getExternalMessage());
     }
 
     public static ErrorResponse of(HttpStatus httpStatus) {

@@ -8,6 +8,8 @@ import flab.project.exception.KakaoException;
 import flab.project.repository.EmailVerificationRepository;
 import flab.project.repository.SmsVerificationRepository;
 import flab.project.repository.UserRepository;
+import flab.project.util.EncryptionUtils;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,15 +28,15 @@ public class UserService {
     private final SmsVerificationRepository smsVerificationRepository;
 
     @Transactional
-    public void registrationUser(User user) {
+    public void registrationUser(User user, String emailVerification, String smsVerification) {
         if (isRegistered(user)) {
-            throw new KakaoException(ExceptionCode.USER_EXIST);
+            throw new KakaoException(ExceptionCode.USER_EXIST, Map.of("Email", user.getEmail(), "Name", user.getName(), "PhoneNumber", user.getPhoneNumber()));
         }
 
         LocalDateTime now = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalDateTime();
 
-        checkEmailVerification(user.getEmail(), now);
-        checkSmsVerification(user.getPhoneNumber(), now);
+        checkEmailVerification(emailVerification, now);
+        checkSmsVerification(smsVerification, now);
 
         userRepository.save(user);
 
@@ -51,8 +53,8 @@ public class UserService {
                 .orElseThrow(() -> new KakaoException(ExceptionCode.EMAIL_NOT_FOUND));
     }
 
-    private void checkEmailVerification(String email, LocalDateTime now) {
-        EmailVerification findVerification = emailVerificationRepository.findByEmail(email)
+    private void checkEmailVerification(String emailEncryptKey, LocalDateTime now) {
+        EmailVerification findVerification = emailVerificationRepository.findByEmailEncryptKey(emailEncryptKey)
                 .orElseThrow(() -> new KakaoException(ExceptionCode.EMAIL_VERIFICATION_NOT_FOUND));
 
         if (!findVerification.checkExpiration(now)) {
@@ -65,7 +67,7 @@ public class UserService {
     }
 
     private void checkSmsVerification(String phoneNumber, LocalDateTime now) {
-        SmsVerification findVerification = smsVerificationRepository.findByPhoneNumber(phoneNumber)
+        SmsVerification findVerification = smsVerificationRepository.findBySmsEncryptKey(phoneNumber)
                 .orElseThrow(() -> new KakaoException(ExceptionCode.SMS_VERIFICATION_NOT_FOUND));
 
         if (!findVerification.checkExpiration(now)) {
@@ -77,43 +79,44 @@ public class UserService {
         }
     }
 
-    public void duplicatedEmail(String email) {
+    public String availableEmail(String email) {
         if (userRepository.existsByEmail(email)) {
             throw new KakaoException(ExceptionCode.DUPLICATED_EMAIL);
         }
 
         if (emailVerificationRepository.existsByEmail(email)) {
-            updateEmailVerification(email);
-        } else {
-            createEmailVerification(email);
+            return updateEmailVerification(email).getEmailEncryptKey();
         }
+
+        return createEmailVerification(email).getEmailEncryptKey();
     }
 
-    private void updateEmailVerification(String email) {
-        EmailVerification findEmail = emailVerificationRepository.findByEmail(email).orElseGet(() -> EmailVerification.builder().build());
+    private EmailVerification updateEmailVerification(String email) {
+        EmailVerification findEmailVerification = emailVerificationRepository.findByEmail(email).orElseGet(() -> EmailVerification.builder().build());
 
         Long milliseconds = System.currentTimeMillis();
         LocalDateTime createdAt = Instant.ofEpochMilli(milliseconds).atZone(ZoneId.systemDefault()).toLocalDateTime();
         LocalDateTime expirationTime = Instant.ofEpochMilli((milliseconds + 300000)).atZone(ZoneId.systemDefault()).toLocalDateTime();
 
-        findEmail.renewEmailVerification(createdAt, expirationTime);
+        findEmailVerification.renewEmailVerification(createdAt, expirationTime);
 
-        emailVerificationRepository.save(findEmail);
+        return emailVerificationRepository.save(findEmailVerification);
     }
 
-    private void createEmailVerification(String email) {
+    private EmailVerification createEmailVerification(String email) {
         Long milliseconds = System.currentTimeMillis();
         LocalDateTime createdAt = Instant.ofEpochMilli(milliseconds).atZone(ZoneId.systemDefault()).toLocalDateTime();
         LocalDateTime expirationTime = Instant.ofEpochMilli((milliseconds + 300000)).atZone(ZoneId.systemDefault()).toLocalDateTime();
 
         EmailVerification emailVerification = EmailVerification.builder()
                 .email(email)
+                .emailEncryptKey(EncryptionUtils.generateEncryptedKey(email))
                 .isVerified(true)
                 .createdAt(createdAt)
                 .expirationTime(expirationTime)
                 .build();
 
-        emailVerificationRepository.save(emailVerification);
+        return emailVerificationRepository.save(emailVerification);
     }
 
     private boolean isRegistered(User user) {

@@ -18,6 +18,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import static flab.project.util.ValidationUtils.validateEmail;
@@ -44,13 +46,20 @@ public class UserController {
             @ApiResponse(responseCode = "409", description = "이미 가입된 유저입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
     @PostMapping
-    public void registration(HttpServletRequest request, @RequestBody UserDto userDto) {
+    public void registration(HttpServletRequest request,
+                             @RequestParam
+                             @Parameter(description = "이메일 암호키", in = ParameterIn.QUERY)
+                             String emailVerification,
+                             @RequestParam
+                             @Parameter(description = "SMS 암호키", in = ParameterIn.QUERY)
+                             String smsVerification,
+                             @RequestBody UserDto userDto) {
         HttpSession session = request.getSession();
         requestHistoryService.checkAccessRequest(session.getId());
 
         userDto.validUserDto();
 
-        userService.registrationUser(UserDto.createUser(userDto));
+        userService.registrationUser(UserDto.createUser(userDto), emailVerification, smsVerification);
     }
 
     @Operation(summary = "이메일 중복 확인", description = "이미 가입된 이메일인지 확인합니다.")
@@ -58,19 +67,18 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "중복된 메일 없음."),
             @ApiResponse(responseCode = "400", description = "이메일 형식이 아닙니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @GetMapping("/duplicated/{email}")
-    public void duplicatedEmail(
+    @GetMapping("/available/{email}")
+    public ResponseEntity availableEmail(
             @PathVariable
             @Parameter(description = "이메일", in = ParameterIn.PATH, example = "asd123@asd.com") String email) {
         validateEmail(email);
 
-        userService.duplicatedEmail(email);
+        return ResponseEntity.ok().header("email-verification-key", userService.availableEmail(email)).build();
     }
 
     @Operation(summary = "이메일 찾기", description = "휴대전화 번호로 가입된 이메일을 찾습니다.")
     @ApiResponses(value = {
-            /* CommonResponseDto<EmailResponseDto>를 표현하지 못하는 문제 */
-            @ApiResponse(responseCode = "200", description = "이메일을 찾았습니다.", content = @Content(schema = @Schema(implementation = CommonResponseDto.class))),
+            @ApiResponse(responseCode = "200", description = "이메일을 찾았습니다."),
             @ApiResponse(responseCode = "400", description = "휴대전화 형식이 아닙니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "가입된 이메일이 없습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -111,14 +119,14 @@ public class UserController {
 
     })
     @GetMapping("/{phoneNumber}/{code}")
-    public void checkSmsCode(@PathVariable
-                             @Parameter(description = "전화번호", in = ParameterIn.PATH, example = "010-1234-5678")
-                             String phoneNumber,
-                             @PathVariable
-                             @Parameter(description = "인증번호", in = ParameterIn.PATH, example = "123456")
-                             String code) {
+    public ResponseEntity checkSmsCode(@PathVariable
+                                       @Parameter(description = "전화번호", in = ParameterIn.PATH, example = "010-1234-5678")
+                                       String phoneNumber,
+                                       @PathVariable
+                                       @Parameter(description = "인증번호", in = ParameterIn.PATH, example = "123456")
+                                       String code) {
         validatePhoneNumber(phoneNumber);
 
-        smsService.checkSmsCode(phoneNumber, code);
+        return ResponseEntity.ok().header("sms-verification-key", smsService.checkSmsCode(phoneNumber, code)).build();
     }
 }

@@ -7,6 +7,7 @@ import flab.project.exception.ExceptionCode;
 import flab.project.exception.KakaoException;
 import flab.project.feign.SmsFeignClient;
 import flab.project.repository.SmsVerificationRepository;
+import flab.project.util.EncryptionUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,32 +46,51 @@ public class SmsService {
     private final SmsVerificationRepository smsVerificationRepository;
     private final SmsFeignClient smsFeignClient;
 
-    /**
-     * TODO: 재요청 시 update 해야 한다.
-     */
-
     public void sendAuthenticationSms(String phoneNumber) {
         long milliseconds = System.currentTimeMillis();
 
-        //sms 확인을 위한 엔티티 생성 및 db에 저장
+        String verificationCode = makeRandomMessage();
+        SmsRequestDto sms = makeSms(phoneNumber, verificationCode);
+        sendSmsApi(Long.toString(milliseconds), sms);
+
+        if (smsVerificationRepository.existsByPhoneNumber(phoneNumber)) {
+            updatePhoneNumberVerification(milliseconds, phoneNumber, verificationCode);
+        } else {
+            createPhoneNumberVerification(milliseconds, phoneNumber, verificationCode);
+        }
+
+    }
+
+    private SmsVerification updatePhoneNumberVerification(long milliseconds, String phoneNumber, String verificationCode) {
+        SmsVerification findSmsVerification = smsVerificationRepository.findByPhoneNumber(phoneNumber)
+                .orElseGet(() -> SmsVerification.builder().build());
+
         LocalDateTime createdAt = Instant.ofEpochMilli(milliseconds).atZone(ZoneId.systemDefault()).toLocalDateTime();
         LocalDateTime expirationTime = Instant.ofEpochMilli((milliseconds + 300000)).atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
 
-        String verificationCode = makeRandomMessage();
+        findSmsVerification.renewSmsVerification(verificationCode, createdAt, expirationTime);
+
+        return smsVerificationRepository.save(findSmsVerification);
+    }
+
+    private SmsVerification createPhoneNumberVerification(long milliseconds, String phoneNumber, String verificationCode) {
+        LocalDateTime createdAt = Instant.ofEpochMilli(milliseconds).atZone(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime expirationTime = Instant.ofEpochMilli((milliseconds + 300000)).atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+
+
 
         SmsVerification smsVerification = SmsVerification.builder()
                 .phoneNumber(phoneNumber)
+                .smsEncryptKey(EncryptionUtils.generateEncryptedKey(phoneNumber))
                 .verificationCode(verificationCode)
                 .expirationTime(expirationTime)
                 .isVerified(false)
                 .createdAt(createdAt)
                 .build();
 
-        SmsRequestDto sms = makeSms(phoneNumber, verificationCode);
-        sendSmsApi(Long.toString(milliseconds), sms);
-
-        smsVerificationRepository.save(smsVerification);
+        return smsVerificationRepository.save(smsVerification);
     }
 
     private SmsRequestDto makeSms(String phoneNumber, String verificationCode) {
@@ -155,9 +175,9 @@ public class SmsService {
     }
 
     @Transactional
-    public void checkSmsCode(String phoneNumber, String code) {
+    public String checkSmsCode(String phoneNumber, String code) {
 
-        smsVerificationRepository.findByPhoneNumber(phoneNumber)
+        SmsVerification checkedSmsVerification = smsVerificationRepository.findByPhoneNumber(phoneNumber)
                 .filter(findVerification -> {
                     if (!LocalDateTime.now().isBefore(findVerification.getExpirationTime())) {
                         throw new KakaoException(ExceptionCode.SMS_EXPIRED_VERIFICATION);
@@ -172,5 +192,7 @@ public class SmsService {
 
                     return true;
                 }).orElseThrow(() -> new KakaoException(ExceptionCode.SMS_VERIFICATION_NOT_FOUND));
+
+        return checkedSmsVerification.getSmsEncryptKey();
     }
 }

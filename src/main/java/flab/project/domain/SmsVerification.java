@@ -20,6 +20,9 @@ public class SmsVerification {
     private String phoneNumber;
 
     @Column(nullable = false)
+    private String smsEncryptKey;
+
+    @Column(nullable = false)
     private String verificationCode;
 
     @Column(nullable = false)
@@ -35,12 +38,10 @@ public class SmsVerification {
         this.isVerified = true;
     }
 
-    /*
-        TODO: 완료된 코드는 완료처리를 해야합니다.
-     */
     @Builder
-    public SmsVerification(String phoneNumber, String verificationCode, LocalDateTime expirationTime, boolean isVerified, LocalDateTime createdAt) {
+    public SmsVerification(String phoneNumber, String smsEncryptKey, String verificationCode, LocalDateTime expirationTime, boolean isVerified, LocalDateTime createdAt) {
         this.phoneNumber = phoneNumber;
+        this.smsEncryptKey = smsEncryptKey;
         this.verificationCode = verificationCode;
         this.expirationTime = expirationTime;
         this.isVerified = isVerified;
@@ -57,5 +58,11 @@ public class SmsVerification {
 
     public boolean isVerified() {
         return isVerified;
+    }
+
+    public void renewSmsVerification(String verificationCode, LocalDateTime createdAt, LocalDateTime expirationTime) {
+        this.verificationCode = verificationCode;
+        this.createdAt = createdAt;
+        this.expirationTime = expirationTime;
     }
 }

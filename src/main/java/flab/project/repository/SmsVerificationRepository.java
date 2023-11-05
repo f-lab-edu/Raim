@@ -10,7 +10,9 @@ import java.util.Optional;
 @Repository
 public interface SmsVerificationRepository extends JpaRepository<SmsVerification, Long> {
 
+    boolean existsByPhoneNumber(String phoneNumber);
     Optional<SmsVerification> findByPhoneNumber(String phoneNumber);
+    Optional<SmsVerification> findBySmsEncryptKey(String smsEncryptKey);
     void deleteByExpirationTimeBefore(LocalDateTime referenceTime);
     void deleteByPhoneNumber(String phoneNumber);
 }
