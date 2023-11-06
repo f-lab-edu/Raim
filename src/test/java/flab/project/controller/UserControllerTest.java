@@ -2,19 +2,15 @@ package flab.project.controller;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import flab.project.domain.User;
 import flab.project.dto.UserDto;
 import flab.project.exception.ExceptionCode;
 import flab.project.exception.KakaoException;
 import flab.project.service.SmsService;
 import flab.project.service.UserService;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -41,24 +37,14 @@ class UserControllerTest {
     @Test
     void 회원가입() throws Exception {
 
-        User user = User.builder()
-                .email("asd@asd.com")
-                .phoneNumber("01012345678")
-                .password("asdf1234!")
-                .name("김개발")
-                .nickname("개발남")
-                .build();
-
-        Mockito.doNothing().when(userService).registrationUser(user, "이메일검증키", "SMS검증키");
-
         UserDto userDto = UserDto.builder()
-                .email("asd@asd.com")
-                .phoneNumber("01012345678")
                 .password("asdf1234!")
                 .confirmPassword("asdf1234!")
                 .name("김개발")
                 .nickname("개발남")
                 .build();
+
+        Mockito.doNothing().when(userService).registrationUser(userDto, "이메일검증키", "SMS검증키");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/users")
                         .param("emailVerification", "이메일검증키")

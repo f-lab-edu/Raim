@@ -59,7 +59,7 @@ public class UserController {
 
         userDto.validUserDto();
 
-        userService.registrationUser(UserDto.createUser(userDto), emailVerification, smsVerification);
+        userService.registrationUser(userDto, emailVerification, smsVerification);
     }
 
     @Operation(summary = "이메일 중복 확인", description = "이미 가입된 이메일인지 확인합니다.")
