@@ -95,7 +95,7 @@ public class SmsService {
 
     private SmsRequestDto makeSms(String phoneNumber, String verificationCode) {
         List<SmsRequestDto.MessageDto> messages = new ArrayList<>();
-        messages.add(SmsRequestDto.MessageDto.builder().to(deleteDashPhoneNumber(phoneNumber)).build());
+        messages.add(SmsRequestDto.MessageDto.builder().to(phoneNumber).build());
 
         return SmsRequestDto.builder()
                 .type("SMS")
@@ -105,10 +105,6 @@ public class SmsService {
                 .content("sms 본인인증 번호는 [" + verificationCode + "] 입니다.")
                 .messages(messages)
                 .build();
-    }
-
-    private String deleteDashPhoneNumber(String phoneNumber) {
-        return phoneNumber.replace("-", "");
     }
 
     private void sendSmsApi(String time, SmsRequestDto smsRequestDto) {

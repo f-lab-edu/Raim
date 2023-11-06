@@ -32,7 +32,7 @@ public class UserDto {
     private String name;
 
     @NotEmpty
-    @Schema(name = "phoneNumber", description = "User 휴대전화", example = "010-1234-5678", requiredMode = RequiredMode.REQUIRED)
+    @Schema(name = "phoneNumber", description = "User 휴대전화", example = "01012345678", requiredMode = RequiredMode.REQUIRED)
     private String phoneNumber;
 
     @Schema(name = "nickname", description = "User 닉네임", example = "개발남")
