@@ -29,6 +29,18 @@ public class UserDto {
     @Schema(name = "confirmPassword", description = "User 비밀번호 확인", example = "asdf1234!", requiredMode = RequiredMode.REQUIRED)
     private String confirmPassword;
 
+    @NotEmpty
+    @Schema(name = "essentialTerms1", description = "필수 약관 동의 확인", example = "true", requiredMode = RequiredMode.REQUIRED)
+    private boolean essentialTerms1;
+
+    @NotEmpty
+    @Schema(name = "essentialTerms2", description = "필수 약관 동의 확인", example = "true", requiredMode = RequiredMode.REQUIRED)
+    private boolean essentialTerms2;
+
+    @NotEmpty
+    @Schema(name = "optionalLocationTerms", description = "위치 서비스 선택 약관 동의 확인", example = "true", requiredMode = RequiredMode.REQUIRED)
+    private boolean optionalLocationTerms;
+
     public static User createUser(UserDto userDto, String email, String phoneNumber) {
 
         return User.builder()
@@ -49,8 +61,9 @@ public class UserDto {
     }
 
     public void validUserDto() {
-        ValidationUtils.confirmPassword(this.password, this.confirmPassword);
-        ValidationUtils.validatePassword(this.password);
-        ValidationUtils.validateName(this.name);
+        ValidationUtils.confirmPassword(password, confirmPassword);
+        ValidationUtils.validatePassword(password);
+        ValidationUtils.validateName(name);
+        ValidationUtils.validateEssentialTerms(essentialTerms1, essentialTerms2);
     }
 }

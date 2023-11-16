@@ -19,7 +19,10 @@ public enum ExceptionCode {
     EMAIL_UNVERIFIED_VERIFICATION(HttpStatus.FORBIDDEN, "이메일 인증이 필요합니다.", "인증이 필요합니다.", 10007),
     SMS_EXPIRED_VERIFICATION(HttpStatus.UNAUTHORIZED, "SMS 인증 유효기간이 지났습니다.", "사용할 수 없는 인증입니다.", 10008),
     SMS_UNVERIFIED_VERIFICATION(HttpStatus.FORBIDDEN, "SMS 인증이 필요합니다.", "인증이 필요합니다.", 10009),
-    SMS_CODE_NOT_MATCH(HttpStatus.UNAUTHORIZED, "인증번호가 올바르지 않습니다.", "인증번호가 올바르지 않습니다.", 11000),
+    SMS_CODE_NOT_MATCH(HttpStatus.UNAUTHORIZED, "인증번호가 올바르지 않습니다.", "인증번호가 올바르지 않습니다.", 10010),
+
+    ESSENTIAL_TERM_NOT_AGREEMENT(HttpStatus.BAD_REQUEST, "필수 약관에 동의하지 않았습니다.", "약관을 체크해야 합니다.", 10011),
+    TERM_NOT_FOUND(HttpStatus.NOT_FOUND, "찾을 수 없는 약관 ID 입니다.", "존재하지 않는 약관입니다.", 10012),
 
     EMAIL_VALIDATION(HttpStatus.BAD_REQUEST, "이메일 형식이 맞지 않습니다.", "잘못된 형식입니다.", 20000),
     PASSWORD_VALIDATION(HttpStatus.BAD_REQUEST, "비밀번호 형식이 맞지 않습니다.", "잘못된 형식입니다.", 20001),

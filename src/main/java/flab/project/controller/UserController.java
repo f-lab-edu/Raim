@@ -6,6 +6,7 @@ import flab.project.dto.UserDto;
 import flab.project.exception.ErrorResponse;
 import flab.project.service.RequestHistoryService;
 import flab.project.service.SmsService;
+import flab.project.service.TermService;
 import flab.project.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,6 +34,7 @@ public class UserController {
 
     private final UserService userService;
     private final SmsService smsService;
+    private final TermService termService;
     private final RequestHistoryService requestHistoryService;
 
     @Operation(summary = "회원 가입", description = "새로운 회원을 등록합니다.")
@@ -85,7 +87,7 @@ public class UserController {
     @GetMapping("/find")
     public CommonResponseDto<EmailResponseDto> findEmail(
             @RequestParam("phoneNumber")
-            @Parameter(description = "전화번호", in = ParameterIn.QUERY, example = "010-1234-5678")
+            @Parameter(description = "전화번호", in = ParameterIn.QUERY, example = "01012345678")
             String phoneNumber) {
         validatePhoneNumber(phoneNumber);
 
@@ -103,7 +105,7 @@ public class UserController {
     @GetMapping("/{phoneNumber}")
     public void sendSmsCode(
             @PathVariable
-            @Parameter(description = "전화번호", in = ParameterIn.PATH, example = "010-1234-5678")
+            @Parameter(description = "전화번호", in = ParameterIn.PATH, example = "01012345678")
             String phoneNumber) {
         validatePhoneNumber(phoneNumber);
 
@@ -120,7 +122,7 @@ public class UserController {
     })
     @GetMapping("/{phoneNumber}/{code}")
     public ResponseEntity checkSmsCode(@PathVariable
-                                       @Parameter(description = "전화번호", in = ParameterIn.PATH, example = "010-1234-5678")
+                                       @Parameter(description = "전화번호", in = ParameterIn.PATH, example = "01012345678")
                                        String phoneNumber,
                                        @PathVariable
                                        @Parameter(description = "인증번호", in = ParameterIn.PATH, example = "123456")

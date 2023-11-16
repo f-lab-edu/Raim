@@ -3,6 +3,7 @@ package flab.project.service;
 import flab.project.domain.EmailVerification;
 import flab.project.domain.SmsVerification;
 import flab.project.domain.User;
+import flab.project.domain.UserAgreement;
 import flab.project.dto.UserDto;
 import flab.project.exception.ExceptionCode;
 import flab.project.exception.KakaoException;
@@ -27,6 +28,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final EmailVerificationRepository emailVerificationRepository;
     private final SmsVerificationRepository smsVerificationRepository;
+    private final UserAgreementService userAgreementService;
 
     @Transactional
     public void registrationUser(UserDto userDto, String emailVerification, String smsVerification) {
@@ -44,8 +46,17 @@ public class UserService {
         }
 
         userRepository.save(user);
+        setUserAgreement(user, userDto.isOptionalLocationTerms());
 
         cleanVerification(user);
+    }
+
+    private void setUserAgreement(User user, boolean optionalLocationTerm) {
+        userAgreementService.setUserEssentialTerms(user);
+
+        if (optionalLocationTerm) {
+            userAgreementService.setUserLocationTerms(user);
+        }
     }
 
     private void cleanVerification(User user) {
