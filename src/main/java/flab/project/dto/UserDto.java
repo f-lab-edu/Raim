@@ -15,9 +15,11 @@ import lombok.Getter;
 public class UserDto {
 
     @NotEmpty
-    @Email
-    @Schema(name = "email", description = "User 이메일", example = "asd123@asd.com", requiredMode = RequiredMode.REQUIRED)
-    private String email;
+    @Schema(name = "name", description = "User 이름", example = "김개발", requiredMode = RequiredMode.REQUIRED)
+    private String name;
+
+    @Schema(name = "nickname", description = "User 닉네임", example = "개발남")
+    private String nickname;
 
     @NotEmpty
     @Schema(name = "password", description = "User 비밀번호", example = "asdf1234!", requiredMode = RequiredMode.REQUIRED)
@@ -28,23 +30,24 @@ public class UserDto {
     private String confirmPassword;
 
     @NotEmpty
-    @Schema(name = "name", description = "User 이름", example = "김개발", requiredMode = RequiredMode.REQUIRED)
-    private String name;
+    @Schema(name = "essentialTerms1", description = "필수 약관 동의 확인", example = "true", requiredMode = RequiredMode.REQUIRED)
+    private boolean essentialTerms1;
 
     @NotEmpty
-    @Schema(name = "phoneNumber", description = "User 휴대전화", example = "01012345678", requiredMode = RequiredMode.REQUIRED)
-    private String phoneNumber;
+    @Schema(name = "essentialTerms2", description = "필수 약관 동의 확인", example = "true", requiredMode = RequiredMode.REQUIRED)
+    private boolean essentialTerms2;
 
-    @Schema(name = "nickname", description = "User 닉네임", example = "개발남")
-    private String nickname;
+    @NotEmpty
+    @Schema(name = "optionalLocationTerms", description = "위치 서비스 선택 약관 동의 확인", example = "true", requiredMode = RequiredMode.REQUIRED)
+    private boolean optionalLocationTerms;
 
-    public static User createUser(UserDto userDto) {
+    public static User createUser(UserDto userDto, String email, String phoneNumber) {
 
         return User.builder()
-                .email(userDto.getEmail())
+                .email(email)
                 .password(userDto.getPassword())
                 .name(userDto.getName())
-                .phoneNumber(userDto.getPhoneNumber())
+                .phoneNumber(phoneNumber)
                 .nickname(userDto.getDefaultNickName())
                 .build();
     }
@@ -58,10 +61,9 @@ public class UserDto {
     }
 
     public void validUserDto() {
-        ValidationUtils.validateEmail(this.email);
-        ValidationUtils.confirmPassword(this.password, this.confirmPassword);
-        ValidationUtils.validatePassword(this.password);
-        ValidationUtils.validateName(this.name);
-        ValidationUtils.validatePhoneNumber(this.phoneNumber);
+        ValidationUtils.confirmPassword(password, confirmPassword);
+        ValidationUtils.validatePassword(password);
+        ValidationUtils.validateName(name);
+        ValidationUtils.validateEssentialTerms(essentialTerms1, essentialTerms2);
     }
 }

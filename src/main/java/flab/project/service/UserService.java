@@ -3,6 +3,8 @@ package flab.project.service;
 import flab.project.domain.EmailVerification;
 import flab.project.domain.SmsVerification;
 import flab.project.domain.User;
+import flab.project.domain.UserAgreement;
+import flab.project.dto.UserDto;
 import flab.project.exception.ExceptionCode;
 import flab.project.exception.KakaoException;
 import flab.project.repository.EmailVerificationRepository;
@@ -26,21 +28,35 @@ public class UserService {
     private final UserRepository userRepository;
     private final EmailVerificationRepository emailVerificationRepository;
     private final SmsVerificationRepository smsVerificationRepository;
+    private final UserAgreementService userAgreementService;
 
     @Transactional
-    public void registrationUser(User user, String emailVerification, String smsVerification) {
+    public void registrationUser(UserDto userDto, String emailVerification, String smsVerification) {
+
+        LocalDateTime now = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalDateTime();
+
+        EmailVerification checkedEmailVerification = checkEmailVerification(emailVerification, now);
+        SmsVerification checkedSmsVerification = checkSmsVerification(smsVerification, now);
+
+        User user = UserDto.createUser(userDto, checkedEmailVerification.getEmail(),
+                checkedSmsVerification.getPhoneNumber());
+
         if (isRegistered(user)) {
             throw new KakaoException(ExceptionCode.USER_EXIST, Map.of("Email", user.getEmail(), "Name", user.getName(), "PhoneNumber", user.getPhoneNumber()));
         }
 
-        LocalDateTime now = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalDateTime();
-
-        checkEmailVerification(emailVerification, now);
-        checkSmsVerification(smsVerification, now);
-
         userRepository.save(user);
+        setUserAgreement(user, userDto.isOptionalLocationTerms());
 
         cleanVerification(user);
+    }
+
+    private void setUserAgreement(User user, boolean optionalLocationTerm) {
+        userAgreementService.setUserEssentialTerms(user);
+
+        if (optionalLocationTerm) {
+            userAgreementService.setUserLocationTerms(user);
+        }
     }
 
     private void cleanVerification(User user) {
@@ -53,7 +69,7 @@ public class UserService {
                 .orElseThrow(() -> new KakaoException(ExceptionCode.EMAIL_NOT_FOUND));
     }
 
-    private void checkEmailVerification(String emailEncryptKey, LocalDateTime now) {
+    private EmailVerification checkEmailVerification(String emailEncryptKey, LocalDateTime now) {
         EmailVerification findVerification = emailVerificationRepository.findByEmailEncryptKey(emailEncryptKey)
                 .orElseThrow(() -> new KakaoException(ExceptionCode.EMAIL_VERIFICATION_NOT_FOUND));
 
@@ -64,9 +80,11 @@ public class UserService {
         if (!findVerification.isVerified()) {
             throw new KakaoException(ExceptionCode.EMAIL_UNVERIFIED_VERIFICATION);
         }
+
+        return findVerification;
     }
 
-    private void checkSmsVerification(String phoneNumber, LocalDateTime now) {
+    private SmsVerification checkSmsVerification(String phoneNumber, LocalDateTime now) {
         SmsVerification findVerification = smsVerificationRepository.findBySmsEncryptKey(phoneNumber)
                 .orElseThrow(() -> new KakaoException(ExceptionCode.SMS_VERIFICATION_NOT_FOUND));
 
@@ -77,6 +95,8 @@ public class UserService {
         if (!findVerification.isVerified()) {
             throw new KakaoException(ExceptionCode.SMS_UNVERIFIED_VERIFICATION);
         }
+
+        return findVerification;
     }
 
     public String availableEmail(String email) {

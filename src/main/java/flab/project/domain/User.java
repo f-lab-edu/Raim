@@ -1,8 +1,16 @@
 package flab.project.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +20,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class User {
 
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     private Long id;
 
     private String email;
@@ -25,6 +34,9 @@ public class User {
 
     private String nickname;
 
+    @OneToMany(mappedBy = "user")
+    private List<UserAgreement> userAgreements = new ArrayList<>();
+
     @Builder
     public User(String email, String password, String name, String phoneNumber, String nickname) {
         this.email = email;
@@ -33,5 +45,4 @@ public class User {
         this.phoneNumber = phoneNumber;
         this.nickname = nickname;
     }
-
 }

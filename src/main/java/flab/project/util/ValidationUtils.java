@@ -8,7 +8,8 @@ import java.util.regex.Pattern;
 
 public class ValidationUtils {
     private static final Pattern emailPattern = Pattern.compile("(\\w\\.)*\\w+@[\\w.-]+\\.[A-Za-z]{2,3}");
-    private static final Pattern passwordPattern = Pattern.compile("^(?=.*[A-Za-z])(?=.*[!@#$%^&*()-_+=])(?=.*\\d).{8,20}$");
+    private static final Pattern passwordPattern = Pattern.compile(
+            "^(?=.*[A-Za-z])(?=.*[!@#$%^&*()-_+=])(?=.*\\d).{8,20}$");
     private static final Pattern namePattern = Pattern.compile("^[A-Za-zㄱ-힣]{2,10}$");
     private static final Pattern phoneNumberPattern = Pattern.compile("^01([0|1|6|7|8|9])(\\d{3}|\\d{4})\\d{4}$");
 
@@ -47,9 +48,16 @@ public class ValidationUtils {
             throw new KakaoException(ExceptionCode.PHONE_NUMBER_VALIDATION);
         }
     }
+
     public static void confirmPassword(String password, String confirmPassword) {
         if (!password.equals(confirmPassword)) {
             throw new KakaoException(ExceptionCode.PASSWORD_CONFIRM);
+        }
+    }
+
+    public static void validateEssentialTerms(boolean essentialTerms1, boolean essentialTerms2) {
+        if (!essentialTerms1 || !essentialTerms2) {
+            throw new KakaoException(ExceptionCode.ESSENTIAL_TERM_NOT_AGREEMENT);
         }
     }
 }
