@@ -1,6 +1,5 @@
 package flab.project.config;
 
-import flab.project.handler.UserHandShakeHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

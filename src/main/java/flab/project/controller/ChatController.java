@@ -1,8 +1,6 @@
 package flab.project.controller;
 
 import flab.project.dto.ChatMessageRequestDto;
-import flab.project.publish.RedisPublisher;
-import flab.project.service.ChatRoomService;
 import flab.project.service.WebSocketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
