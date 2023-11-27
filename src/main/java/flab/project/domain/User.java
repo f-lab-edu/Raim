@@ -37,6 +37,9 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<UserAgreement> userAgreements = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user")
+    private List<ChatParticipant> chatParticipants = new ArrayList<>();
+
     @Builder
     public User(String email, String password, String name, String phoneNumber, String nickname) {
         this.email = email;
