@@ -30,6 +30,8 @@ public enum ExceptionCode {
     PHONE_NUMBER_VALIDATION(HttpStatus.BAD_REQUEST, "휴대전화 형식이 맞지 않습니다.", "잘못된 형식입니다.", 20004),
     PASSWORD_CONFIRM(HttpStatus.BAD_REQUEST, "비밀번호와 확인 비밀번호가 일치하지 않습니다.", "잘못된 형식입니다.", 20005),
 
+    CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 채팅방입니다.", "잘못된 입력입니다.", 50000),
+
     REQUEST_TOO_FAST(HttpStatus.TOO_MANY_REQUESTS, "요청이 너무 빠릅니다.", "요청할 수 없습니다.", 60000),
 
     API_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "외부 API를 처리하지 못했습니다.", "응답할 수 없습니다.", 70000),
