@@ -5,13 +5,17 @@ import flab.project.domain.SmsVerification;
 import flab.project.domain.User;
 import flab.project.domain.UserAgreement;
 import flab.project.dto.UserDto;
+import flab.project.dto.UserResponseDto;
 import flab.project.exception.ExceptionCode;
 import flab.project.exception.KakaoException;
 import flab.project.repository.EmailVerificationRepository;
 import flab.project.repository.SmsVerificationRepository;
 import flab.project.repository.UserRepository;
 import flab.project.util.EncryptionUtils;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +37,8 @@ public class UserService {
     @Transactional
     public void registrationUser(UserDto userDto, String emailVerification, String smsVerification) {
 
-        LocalDateTime now = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime now = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
 
         EmailVerification checkedEmailVerification = checkEmailVerification(emailVerification, now);
         SmsVerification checkedSmsVerification = checkSmsVerification(smsVerification, now);
@@ -42,7 +47,8 @@ public class UserService {
                 checkedSmsVerification.getPhoneNumber());
 
         if (isRegistered(user)) {
-            throw new KakaoException(ExceptionCode.USER_EXIST, Map.of("Email", user.getEmail(), "Name", user.getName(), "PhoneNumber", user.getPhoneNumber()));
+            throw new KakaoException(ExceptionCode.USER_EXIST,
+                    Map.of("Email", user.getEmail(), "Name", user.getName(), "PhoneNumber", user.getPhoneNumber()));
         }
 
         userRepository.save(user);
@@ -62,6 +68,13 @@ public class UserService {
     private void cleanVerification(User user) {
         emailVerificationRepository.deleteByEmail(user.getEmail());
         smsVerificationRepository.deleteByPhoneNumber(user.getPhoneNumber());
+    }
+
+    // 친구목록 찾기로 변경
+    public List<UserResponseDto> findUserFriends(Long userId) {
+        return userRepository.findAll().stream()
+                .map(user -> UserResponseDto.of(user))
+                .collect(Collectors.toList());
     }
 
     public String findEmail(String phoneNumber) {
@@ -112,11 +125,13 @@ public class UserService {
     }
 
     private EmailVerification updateEmailVerification(String email) {
-        EmailVerification findEmailVerification = emailVerificationRepository.findByEmail(email).orElseGet(() -> EmailVerification.builder().build());
+        EmailVerification findEmailVerification = emailVerificationRepository.findByEmail(email)
+                .orElseGet(() -> EmailVerification.builder().build());
 
         Long milliseconds = System.currentTimeMillis();
         LocalDateTime createdAt = Instant.ofEpochMilli(milliseconds).atZone(ZoneId.systemDefault()).toLocalDateTime();
-        LocalDateTime expirationTime = Instant.ofEpochMilli((milliseconds + 300000)).atZone(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime expirationTime = Instant.ofEpochMilli((milliseconds + 300000)).atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
 
         findEmailVerification.renewEmailVerification(createdAt, expirationTime);
 
@@ -126,7 +141,8 @@ public class UserService {
     private EmailVerification createEmailVerification(String email) {
         Long milliseconds = System.currentTimeMillis();
         LocalDateTime createdAt = Instant.ofEpochMilli(milliseconds).atZone(ZoneId.systemDefault()).toLocalDateTime();
-        LocalDateTime expirationTime = Instant.ofEpochMilli((milliseconds + 300000)).atZone(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime expirationTime = Instant.ofEpochMilli((milliseconds + 300000)).atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
 
         EmailVerification emailVerification = EmailVerification.builder()
                 .email(email)
@@ -141,5 +157,9 @@ public class UserService {
 
     private boolean isRegistered(User user) {
         return userRepository.existsByEmail(user.getEmail());
+    }
+
+    public User getUser(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() -> new KakaoException(ExceptionCode.USER_NOT_FOUND));
     }
 }
