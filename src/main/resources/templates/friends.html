@@ -1,0 +1,39 @@
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Friends</title>
+  <link th:href="@{/webjars/bootstrap/5.2.3/css/bootstrap.min.css}" rel="stylesheet"/>
+  <style> .container {
+    max-width: 560px;
+  }</style>
+</head>
+<body>
+<div class="container">
+  <h1>User List</h1>
+  <ul class="list-group" th:each="userResponse:${users}">
+    <li class="list-group-item" th:text="|'${userResponse.id}' '${userResponse.name}'|"
+        th:onclick="|createChatRoom('${userResponse.id}')|">
+    </li>
+  </ul>
+</div>
+</body>
+<script th:inline="javascript">
+  function createChatRoom(userId) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', "/friends/private", true);
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+
+    var requestBody = JSON.stringify({user1Id:1,user2Id:userId});
+    xhr.send(requestBody);
+
+    xhr.onreadystatechange = function () {
+      console.log(xhr.responseText);
+      if (xhr.readyState === 4 && xhr.status == 200) {
+        var response = JSON.parse(xhr.responseText);
+        console.log(response);
+        window.location.href = "/friends/chat/private-room/" + response.roomId;
+      }
+    }
+  }
+</script>
+</html>
