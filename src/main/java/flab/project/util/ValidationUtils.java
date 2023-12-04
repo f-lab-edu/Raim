@@ -1,8 +1,10 @@
 package flab.project.util;
 
+import flab.project.domain.User;
 import flab.project.exception.ExceptionCode;
 
 import flab.project.exception.KakaoException;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,5 +61,14 @@ public class ValidationUtils {
         if (!essentialTerms1 || !essentialTerms2) {
             throw new KakaoException(ExceptionCode.ESSENTIAL_TERM_NOT_AGREEMENT);
         }
+    }
+
+    public static void validateSendMessage(User loginUser, List<User> users) {
+        for (User user: users) {
+            if (user.getId() == loginUser.getId()) {
+                return;
+            }
+        }
+        throw new KakaoException(ExceptionCode.CHATROOM_FORBIDDEN);
     }
 }
