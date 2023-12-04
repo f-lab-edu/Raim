@@ -31,6 +31,7 @@ public enum ExceptionCode {
     PASSWORD_CONFIRM(HttpStatus.BAD_REQUEST, "비밀번호와 확인 비밀번호가 일치하지 않습니다.", "잘못된 형식입니다.", 20005),
 
     CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 채팅방입니다.", "잘못된 입력입니다.", 50000),
+    CHATROOM_FORBIDDEN(HttpStatus.FORBIDDEN, "접근할 수 없는 채팅방입니다.", "접근 권한이 없습니다.", 50001),
 
     REQUEST_TOO_FAST(HttpStatus.TOO_MANY_REQUESTS, "요청이 너무 빠릅니다.", "요청할 수 없습니다.", 60000),
 
