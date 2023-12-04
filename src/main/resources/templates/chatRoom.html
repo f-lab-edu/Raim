@@ -46,7 +46,8 @@
 </main>
 </body>
 <script th:if="${loginSuccess}" th:inline="javascript">
-    const roomId = "[[${roomId}]]";
+    console.log([[${chatRoom}]]);
+    const roomId = [[${chatRoom.roomId}]];
     const sender = [[${loginUser.name}]];
     let socket;
     const messageInput = document.getElementById('message');

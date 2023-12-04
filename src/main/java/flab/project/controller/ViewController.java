@@ -71,7 +71,6 @@ public class ViewController {
         }
 
         ChatRoomResponseDto chatRoom = chatRoomService.getChatRoom(roomId, user);
-        model.addAttribute("roomId", roomId);
         model.addAttribute("loginUser", UserResponseDto.of(user));
         model.addAttribute("chatRoom", chatRoom);
 
