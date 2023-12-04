@@ -34,11 +34,8 @@ public class ChatRoom implements Serializable {
         this.name = name;
         this.chatRoomType = chatRoomType;
     }
-    public static ChatRoom createPrivateRoom() {
-        return new ChatRoom("", ChatRoomType.PRIVATE);
+    public static ChatRoom createChatRoom(String name, ChatRoomType chatRoomType) {
+        return new ChatRoom(name, chatRoomType);
     }
 
-    public static ChatRoom createGroupRoom(String name) {
-        return new ChatRoom(name, ChatRoomType.GROUP);
-    }
 }
