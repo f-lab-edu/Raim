@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class UserService {
     private final EmailVerificationRepository emailVerificationRepository;
     private final SmsVerificationRepository smsVerificationRepository;
     private final UserAgreementService userAgreementService;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public void registrationUser(UserDto userDto, String emailVerification, String smsVerification) {
@@ -44,7 +46,7 @@ public class UserService {
         SmsVerification checkedSmsVerification = checkSmsVerification(smsVerification, now);
 
         User user = UserDto.createUser(userDto, checkedEmailVerification.getEmail(),
-                checkedSmsVerification.getPhoneNumber());
+                checkedSmsVerification.getPhoneNumber(), passwordEncoder);
 
         if (isRegistered(user)) {
             throw new KakaoException(ExceptionCode.USER_EXIST,
@@ -161,5 +163,11 @@ public class UserService {
 
     public User getUser(Long userId) {
         return userRepository.findById(userId).orElseThrow(() -> new KakaoException(ExceptionCode.USER_NOT_FOUND));
+    }
+
+    public List<UserResponseDto> getUserFriends(Long userId) {
+        List<UserResponseDto> friends = userRepository.findAll().stream().filter(user -> user.getId() != userId)
+                .map(user -> UserResponseDto.of(user)).collect(Collectors.toList());
+        return friends;
     }
 }
