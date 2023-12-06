@@ -1,6 +1,7 @@
 package flab.project.config;
 
 import flab.project.handler.ChatWebSocketHandler;
+import flab.project.interceptor.CustomHandshakeInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -22,6 +23,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(chatWebSocketHandler, "/kakao-chat")
+                .addInterceptors(new CustomHandshakeInterceptor())
                 .addInterceptors(new HttpSessionHandshakeInterceptor())
                 .setAllowedOrigins("*");
     }
