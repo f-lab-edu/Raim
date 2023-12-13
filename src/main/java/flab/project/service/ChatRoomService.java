@@ -1,8 +1,11 @@
 package flab.project.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import flab.project.domain.ChatParticipant;
 import flab.project.domain.ChatRoom;
 import flab.project.domain.ChatRoomType;
+import flab.project.domain.ServerInfo;
 import flab.project.domain.User;
 import flab.project.dto.ChatRoomResponseDto;
 import flab.project.exception.ExceptionCode;
@@ -16,10 +19,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 
 @RequiredArgsConstructor
 @Service
@@ -30,6 +39,7 @@ public class ChatRoomService {
     private final ChatParticipantService chatParticipantService;
     private final WebSocketSessionRepository webSocketSessionRepository;
     private final UserService userService;
+    private final ObjectMapper objectMapper;
 
 
     public boolean existPrivateChatRoom(List<Long> usersId) {
@@ -93,17 +103,54 @@ public class ChatRoomService {
         ValidationUtils.validateSendMessage(loginUser, users);
 
         for (User user: users) {
-            WebSocketSession userWebSocketSession = webSocketSessionRepository.getWebSocketSession(user.getId());
+            ConcurrentWebSocketSessionDecorator userWebSocketSession = webSocketSessionRepository.getWebSocketSession(user.getId());
 
             // User가 현재 서버에 세션이 없을때를 고려해야 함.
-            // 1. User의 웹소켓 세션이 다른 서버에 있을 때
-            // 2. User의 웹소켓 세션이 아무곳에도 없을
+            if (userWebSocketSession == null) {
+                // 1. User의 웹소켓 세션이 다른 서버에 있을 때
+                if (webSocketSessionRepository.containUserSession(user.getId())) {
+                    ServerInfo serverInfo = webSocketSessionRepository.getUserSession(user.getId());
+
+                    String url = "http://" + "[" + serverInfo.getAddress() + "]" + ":" + serverInfo.getPort() + "/api/chat/" + user.getId();
+
+//                    URI uri = buildURI(user.getId(), serverInfo);
+//                    ChatFeignClient feignClient = Feign.builder().target(ChatFeignClient.class, uri.toString());
+//                    feignClient.sendChatMessage(uri, user.getId(), message);
+
+                    try {
+                        RestTemplate restTemplate = new RestTemplate();
+
+                        HttpHeaders headers = new HttpHeaders();
+                        headers.setContentType(MediaType.APPLICATION_JSON);
+
+                        HttpEntity<String> requestEntity = new HttpEntity<>(objectMapper.writeValueAsString(message), headers);
+                        
+                        restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+
+                    } catch (JsonProcessingException e) {
+                        throw new KakaoException(ExceptionCode.SERVER_ERROR);
+                    }
+                }
+
+                // 2. User의 웹소켓 세션이 아무곳에도 없을 때
+            }
 
             try {
                 userWebSocketSession.sendMessage(message);
             } catch (IOException e) {
                 throw new KakaoException(ExceptionCode.SERVER_ERROR);
             }
+        }
+    }
+
+    @Transactional
+    public void sendMessage(Long userId, TextMessage textMessage) {
+        ConcurrentWebSocketSessionDecorator userWebSocketSession = webSocketSessionRepository.getWebSocketSession(userId);
+
+        try {
+            userWebSocketSession.sendMessage(textMessage);
+        } catch (IOException e) {
+            throw new KakaoException(ExceptionCode.SERVER_ERROR);
         }
     }
 }
