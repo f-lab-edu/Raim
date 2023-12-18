@@ -7,15 +7,15 @@ import lombok.Getter;
 @Getter
 public class ServerInfo implements Serializable {
 
-    private InetAddress address;
+    private String address;
     private int port;
 
-    private ServerInfo(InetAddress address, int port) {
+    private ServerInfo(String address, int port) {
         this.address = address;
         this.port = port;
     }
 
-    public static ServerInfo of(InetAddress address, int port) {
+    public static ServerInfo of(String address, int port) {
         return new ServerInfo(address, port);
     }
 }

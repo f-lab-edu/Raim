@@ -2,19 +2,25 @@ package flab.project.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.Feign;
+import flab.project.domain.ChatMessage;
 import flab.project.domain.ChatParticipant;
 import flab.project.domain.ChatRoom;
 import flab.project.domain.ChatRoomType;
 import flab.project.domain.ServerInfo;
 import flab.project.domain.User;
+import flab.project.dto.ChatMessageDto;
 import flab.project.dto.ChatRoomResponseDto;
 import flab.project.exception.ExceptionCode;
 import flab.project.exception.KakaoException;
+import flab.project.feign.ChatFeignClient;
+import flab.project.repository.ChatMessageRepository;
 import flab.project.repository.ChatParticipantRepository;
 import flab.project.repository.ChatRoomRepository;
 import flab.project.repository.WebSocketSessionRepository;
 import flab.project.util.ValidationUtils;
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -36,6 +42,7 @@ public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;
+    private final ChatMessageRepository chatMessageRepository;
     private final ChatParticipantService chatParticipantService;
     private final WebSocketSessionRepository webSocketSessionRepository;
     private final UserService userService;
@@ -93,8 +100,10 @@ public class ChatRoomService {
     }
 
     @Transactional
-    public void sendMessage(Long roomId, User loginUser, TextMessage message) {
-        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+    public void sendMessage(User loginUser, TextMessage message) {
+        ChatMessage chatMessage = getChatMessage(message);
+
+        ChatRoom chatRoom = chatRoomRepository.findById(chatMessage.getRoomId())
                 .orElseThrow(() -> new KakaoException(ExceptionCode.CHATROOM_NOT_FOUND));
 
         List<User> users = chatRoom.getChatParticipants().stream().map(ChatParticipant::getUser)
@@ -111,12 +120,9 @@ public class ChatRoomService {
                 if (webSocketSessionRepository.containUserSession(user.getId())) {
                     ServerInfo serverInfo = webSocketSessionRepository.getUserSession(user.getId());
 
-                    String url = "http://" + "[" + serverInfo.getAddress() + "]" + ":" + serverInfo.getPort() + "/api/chat/" + user.getId();
+                    String url = "http://" + serverInfo.getAddress() + ":" + serverInfo.getPort() + "/api/chat/" + user.getId();
 
-//                    URI uri = buildURI(user.getId(), serverInfo);
-//                    ChatFeignClient feignClient = Feign.builder().target(ChatFeignClient.class, uri.toString());
-//                    feignClient.sendChatMessage(uri, user.getId(), message);
-
+                    // 이렇게 동기적으로 처리하는 방식이 옳은 방식일까?
                     try {
                         RestTemplate restTemplate = new RestTemplate();
 
@@ -124,7 +130,7 @@ public class ChatRoomService {
                         headers.setContentType(MediaType.APPLICATION_JSON);
 
                         HttpEntity<String> requestEntity = new HttpEntity<>(objectMapper.writeValueAsString(message), headers);
-                        
+
                         restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 
                     } catch (JsonProcessingException e) {
@@ -140,6 +146,8 @@ public class ChatRoomService {
             } catch (IOException e) {
                 throw new KakaoException(ExceptionCode.SERVER_ERROR);
             }
+
+            chatMessageRepository.save(chatMessage);
         }
     }
 
@@ -150,6 +158,15 @@ public class ChatRoomService {
         try {
             userWebSocketSession.sendMessage(textMessage);
         } catch (IOException e) {
+            throw new KakaoException(ExceptionCode.SERVER_ERROR);
+        }
+    }
+
+    private ChatMessage getChatMessage(TextMessage textMessage) {
+        try {
+            ChatMessageDto chatMessageDto = objectMapper.readValue(textMessage.getPayload(), ChatMessageDto.class);
+            return ChatMessage.of(chatMessageDto);
+        } catch (JsonProcessingException e) {
             throw new KakaoException(ExceptionCode.SERVER_ERROR);
         }
     }
