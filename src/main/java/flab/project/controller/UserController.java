@@ -6,7 +6,6 @@ import flab.project.dto.UserDto;
 import flab.project.exception.ErrorResponse;
 import flab.project.service.RequestHistoryService;
 import flab.project.service.SmsService;
-import flab.project.service.TermService;
 import flab.project.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,7 +18,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,10 +29,8 @@ import static flab.project.util.ValidationUtils.validatePhoneNumber;
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
 public class UserController {
-
     private final UserService userService;
     private final SmsService smsService;
-    private final TermService termService;
     private final RequestHistoryService requestHistoryService;
 
     @Operation(summary = "회원 가입", description = "새로운 회원을 등록합니다.")

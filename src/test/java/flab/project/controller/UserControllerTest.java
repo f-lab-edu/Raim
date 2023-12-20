@@ -42,6 +42,9 @@ class UserControllerTest {
                 .confirmPassword("asdf1234!")
                 .name("김개발")
                 .nickname("개발남")
+                .essentialTerms1(true)
+                .essentialTerms2(true)
+                .optionalLocationTerms(true)
                 .build();
 
         Mockito.doNothing().when(userService).registrationUser(userDto, "이메일검증키", "SMS검증키");
@@ -72,7 +75,7 @@ class UserControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/users/01012345678/123456"))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value(11000))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value(10010))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("인증번호가 올바르지 않습니다."));
     }
 

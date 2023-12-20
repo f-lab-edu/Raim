@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
 import lombok.Getter;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Getter
 @Builder
@@ -41,11 +42,11 @@ public class UserDto {
     @Schema(name = "optionalLocationTerms", description = "위치 서비스 선택 약관 동의 확인", example = "true", requiredMode = RequiredMode.REQUIRED)
     private boolean optionalLocationTerms;
 
-    public static User createUser(UserDto userDto, String email, String phoneNumber) {
+    public static User createUser(UserDto userDto, String email, String phoneNumber, PasswordEncoder passwordEncoder) {
 
         return User.builder()
                 .email(email)
-                .password(userDto.getPassword())
+                .password(passwordEncoder.encode(userDto.getPassword()))
                 .name(userDto.getName())
                 .phoneNumber(phoneNumber)
                 .nickname(userDto.getDefaultNickName())
