@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 @Getter
-public class RequestHistory {
+public class RequestHistory extends BaseEntity{
     @Id @GeneratedValue
     private Long id;
 

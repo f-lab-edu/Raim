@@ -5,7 +5,7 @@ import java.net.InetAddress;
 import lombok.Getter;
 
 @Getter
-public class ServerInfo implements Serializable {
+public class ServerInfo extends BaseEntity implements Serializable {
 
     private String address;
     private int port;

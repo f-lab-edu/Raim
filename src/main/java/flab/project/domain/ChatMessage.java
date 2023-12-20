@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-public class ChatMessage {
+public class ChatMessage extends BaseEntity{
 
     @Id @GeneratedValue
     private Long id;

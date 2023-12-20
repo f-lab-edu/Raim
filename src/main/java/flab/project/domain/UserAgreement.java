@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-public class UserAgreement {
+public class UserAgreement extends BaseEntity {
     @Id @GeneratedValue
     private Long id;
 
