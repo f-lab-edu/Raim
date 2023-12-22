@@ -14,10 +14,16 @@ import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.envers.AuditJoinTable;
+import org.hibernate.envers.AuditOverride;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 @Entity
 @Getter
 @NoArgsConstructor
+@Audited
 public class User {
 
     @Id
@@ -38,9 +44,11 @@ public class User {
     private UserRole userRole;
 
     @OneToMany(mappedBy = "user")
+    @NotAudited
     private List<UserAgreement> userAgreements = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
+    @NotAudited
     private List<ChatParticipant> chatParticipants = new ArrayList<>();
 
     @Builder
