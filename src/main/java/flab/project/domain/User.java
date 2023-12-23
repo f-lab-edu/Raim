@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ import org.hibernate.envers.RelationTargetAuditMode;
 public class User {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String email;
@@ -59,5 +60,9 @@ public class User {
         this.phoneNumber = phoneNumber;
         this.nickname = nickname;
         this.userRole = UserRole.USER;
+    }
+
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
     }
 }

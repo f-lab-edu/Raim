@@ -3,6 +3,7 @@ package flab.project.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ public class Terms {
     public final static long ESSENTIAL_TERMS_2 = 2;
     public final static long OPTIONAL_LOCATION_TERMS = 3;
 
-    @Id @GeneratedValue
+    @Id
     private Long id;
 
     @Column

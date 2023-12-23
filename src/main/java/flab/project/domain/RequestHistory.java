@@ -2,6 +2,7 @@ package flab.project.domain;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,7 +14,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 public class RequestHistory {
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String sessionId;
