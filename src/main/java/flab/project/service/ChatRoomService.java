@@ -2,7 +2,6 @@ package flab.project.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import feign.Feign;
 import flab.project.domain.ChatMessage;
 import flab.project.domain.ChatParticipant;
 import flab.project.domain.ChatRoom;
@@ -13,14 +12,12 @@ import flab.project.dto.ChatMessageDto;
 import flab.project.dto.ChatRoomResponseDto;
 import flab.project.exception.ExceptionCode;
 import flab.project.exception.KakaoException;
-import flab.project.feign.ChatFeignClient;
 import flab.project.repository.ChatMessageRepository;
 import flab.project.repository.ChatParticipantRepository;
 import flab.project.repository.ChatRoomRepository;
 import flab.project.repository.WebSocketSessionRepository;
 import flab.project.util.ValidationUtils;
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,7 +26,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -51,7 +47,7 @@ public class ChatRoomService {
 
     public boolean existPrivateChatRoom(List<Long> usersId) {
         List<User> users = usersId.stream().map(userId ->
-                userService.getUser(userId)).collect(Collectors.toList());
+                userService.getUser(userId)).toList();
 
         User user1 = users.get(0);
         User user2 = users.get(1);
@@ -65,7 +61,7 @@ public class ChatRoomService {
     @Transactional
     public ChatRoomResponseDto createPrivateChatRoom(List<Long> usersId) {
         List<User> users = usersId.stream().map(userId ->
-                userService.getUser(userId)).collect(Collectors.toList());
+                userService.getUser(userId)).toList();
 
         User user1 = users.get(0);
         User user2 = users.get(1);
