@@ -25,7 +25,7 @@ import org.hibernate.envers.RelationTargetAuditMode;
 @Getter
 @NoArgsConstructor
 @Audited
-public class User {
+public class User extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

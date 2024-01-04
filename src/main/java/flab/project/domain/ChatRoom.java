@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-public class ChatRoom implements Serializable {
+public class ChatRoom extends BaseEntity implements Serializable {
     private static final long serialVersionUID = 6434598345983495L;
 
     @Id

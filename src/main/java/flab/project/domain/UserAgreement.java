@@ -14,7 +14,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-public class UserAgreement {
+public class UserAgreement extends BaseEntity {
+  
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
