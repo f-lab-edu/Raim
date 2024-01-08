@@ -35,4 +35,8 @@ public class Friend extends BaseEntity{
         this.friend = friend;
         this.isBlock = isBlock;
     }
+
+    public void changeBlockMode(boolean isBlock) {
+        this.isBlock = isBlock;
+    }
 }
