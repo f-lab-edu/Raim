@@ -1,7 +1,6 @@
 package flab.project.security.userDetails;
 
 import java.util.Collection;
-import org.hibernate.sql.ast.tree.expression.Collation;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
@@ -17,4 +16,6 @@ public class UserContext extends User {
     public flab.project.domain.User getUser() {
         return user;
     }
+
+
 }
