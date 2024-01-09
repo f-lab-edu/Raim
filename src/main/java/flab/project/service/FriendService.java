@@ -51,13 +51,14 @@ public class FriendService {
                 .isBlock(false)
                 .build();
 
+        // 메시지 큐를 연결해서 나를 추가한 친구에 저장하거나 푸시 메시지를 보낸다.
+
         friendRepository.save(entity);
     }
 
     @Transactional
     public void deleteFriend(Long id) {
-        Friend friend = friendRepository.findById(id).orElseThrow(() ->
-                new KakaoException(ExceptionCode.NO_FRIEND_RELATIONSHIP));
+        Friend friend = friendRepository.findById(id).orElseThrow(() -> new KakaoException(ExceptionCode.USER_NOT_FOUND));
 
         friendRepository.delete(friend);
     }
