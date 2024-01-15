@@ -9,6 +9,8 @@ import flab.project.domain.ChatRoomType;
 import flab.project.domain.ServerInfo;
 import flab.project.domain.User;
 import flab.project.dto.ChatMessageDto;
+import flab.project.dto.ChatRoomRequestDto;
+import flab.project.dto.ChatRoomDetailResponseDto;
 import flab.project.dto.ChatRoomResponseDto;
 import flab.project.exception.ExceptionCode;
 import flab.project.exception.KakaoException;
@@ -22,6 +24,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -35,6 +39,7 @@ import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorato
 @RequiredArgsConstructor
 @Service
 public class ChatRoomService {
+    private static final int PRIVATE_CHAT_PARTICIPANT_COUNT = 2;
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;
@@ -43,7 +48,6 @@ public class ChatRoomService {
     private final WebSocketSessionRepository webSocketSessionRepository;
     private final UserService userService;
     private final ObjectMapper objectMapper;
-
 
     public boolean existPrivateChatRoom(List<Long> usersId) {
         List<User> users = usersId.stream().map(userId ->
@@ -59,9 +63,45 @@ public class ChatRoomService {
     }
 
     @Transactional
-    public ChatRoomResponseDto createPrivateChatRoom(List<Long> usersId) {
+    public ChatRoomDetailResponseDto createChatRoom(ChatRoomRequestDto chatRoomRequestDto) {
+        String roomName = chatRoomRequestDto.getRoomName();
+
+        List<Long> usersId = chatRoomRequestDto.getUsers();
+
+        if (usersId.size() < PRIVATE_CHAT_PARTICIPANT_COUNT) {
+            throw new KakaoException(ExceptionCode.CHATROOM_NOT_CREATED);
+        }
+
+        if (usersId.size() == PRIVATE_CHAT_PARTICIPANT_COUNT) {
+            return this.createPrivateChatRoom(roomName, usersId);
+        }
+
+        return createGroupChatRoom(roomName, usersId);
+    }
+
+    private ChatRoomDetailResponseDto createGroupChatRoom(String roomName, List<Long> usersId) {
         List<User> users = usersId.stream().map(userId ->
                 userService.getUser(userId)).toList();
+
+        if (roomName.equals(""))
+            roomName = createDefaultChatRoomName(users);
+
+        ChatRoom chatRoom = ChatRoom.createChatRoom(roomName, users.size(), ChatRoomType.GROUP);
+
+        for (User user : users) {
+            chatParticipantService.setChatParticipant(chatRoom, user);
+        }
+
+        chatRoomRepository.save(chatRoom);
+
+        return ChatRoomDetailResponseDto.of(chatRoom, users);
+    }
+
+    private ChatRoomDetailResponseDto createPrivateChatRoom(String roomName, List<Long> usersId) {
+        List<User> users = usersId.stream().map(userService::getUser).toList();
+
+        if (roomName.equals(""))
+            roomName = createDefaultChatRoomName(users);
 
         User user1 = users.get(0);
         User user2 = users.get(1);
@@ -69,20 +109,24 @@ public class ChatRoomService {
         Optional<ChatRoom> findChatRoom = chatParticipantRepository.findPrivateChatRoom(user1, user2,
                 ChatRoomType.PRIVATE);
         if (findChatRoom.isPresent()) {
-            return ChatRoomResponseDto.of(findChatRoom.get(), users);
+            return ChatRoomDetailResponseDto.of(findChatRoom.get(), users);
         }
 
-        ChatRoom chatRoom = ChatRoom.createChatRoom("", ChatRoomType.PRIVATE);
+        ChatRoom chatRoom = ChatRoom.createChatRoom(roomName, PRIVATE_CHAT_PARTICIPANT_COUNT, ChatRoomType.PRIVATE);
 
         chatParticipantService.setChatParticipant(chatRoom, user1);
         chatParticipantService.setChatParticipant(chatRoom, user2);
 
         chatRoomRepository.save(chatRoom);
 
-        return ChatRoomResponseDto.of(chatRoom, users);
+        return ChatRoomDetailResponseDto.of(chatRoom, users);
     }
 
-    public ChatRoomResponseDto getChatRoom(Long roomId, User loginUser) {
+    private String createDefaultChatRoomName(List<User> users) {
+        return users.stream().map(User::getName).collect(Collectors.joining(","));
+    }
+
+    public ChatRoomDetailResponseDto getChatRoom(Long roomId, User loginUser) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new KakaoException(ExceptionCode.CHATROOM_NOT_FOUND));
         List<ChatParticipant> chatParticipants = chatRoom.getChatParticipants();
@@ -92,7 +136,7 @@ public class ChatRoomService {
 
         ValidationUtils.validateSendMessage(loginUser, users);
 
-        return ChatRoomResponseDto.of(chatRoom, users);
+        return ChatRoomDetailResponseDto.of(chatRoom, users);
     }
 
     @Transactional
@@ -107,8 +151,9 @@ public class ChatRoomService {
 
         ValidationUtils.validateSendMessage(loginUser, users);
 
-        for (User user: users) {
-            ConcurrentWebSocketSessionDecorator userWebSocketSession = webSocketSessionRepository.getWebSocketSession(user.getId());
+        for (User user : users) {
+            ConcurrentWebSocketSessionDecorator userWebSocketSession = webSocketSessionRepository.getWebSocketSession(
+                    user.getId());
 
             // User가 현재 서버에 세션이 없을때를 고려해야 함.
             if (userWebSocketSession == null) {
@@ -116,7 +161,8 @@ public class ChatRoomService {
                 if (webSocketSessionRepository.containUserSession(user.getId())) {
                     ServerInfo serverInfo = webSocketSessionRepository.getUserSession(user.getId());
 
-                    String url = "http://" + serverInfo.getAddress() + ":" + serverInfo.getPort() + "/api/chat/" + user.getId();
+                    String url = "http://" + serverInfo.getAddress() + ":" + serverInfo.getPort() + "/api/chat/"
+                            + user.getId();
 
                     // 이렇게 동기적으로 처리하는 방식이 옳은 방식일까?
                     try {
@@ -125,7 +171,8 @@ public class ChatRoomService {
                         HttpHeaders headers = new HttpHeaders();
                         headers.setContentType(MediaType.APPLICATION_JSON);
 
-                        HttpEntity<String> requestEntity = new HttpEntity<>(objectMapper.writeValueAsString(message), headers);
+                        HttpEntity<String> requestEntity = new HttpEntity<>(objectMapper.writeValueAsString(message),
+                                headers);
 
                         restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 
@@ -149,7 +196,8 @@ public class ChatRoomService {
 
     @Transactional
     public void sendMessage(Long userId, TextMessage textMessage) {
-        ConcurrentWebSocketSessionDecorator userWebSocketSession = webSocketSessionRepository.getWebSocketSession(userId);
+        ConcurrentWebSocketSessionDecorator userWebSocketSession = webSocketSessionRepository.getWebSocketSession(
+                userId);
 
         try {
             userWebSocketSession.sendMessage(textMessage);
@@ -165,5 +213,37 @@ public class ChatRoomService {
         } catch (JsonProcessingException e) {
             throw new KakaoException(ExceptionCode.SERVER_ERROR);
         }
+    }
+
+    @Transactional
+    public ChatRoomDetailResponseDto inviteUser(Long roomId, List<Long> usersId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new KakaoException(ExceptionCode.CHATROOM_NOT_FOUND));
+        List<User> users = usersId.stream().map(userService::getUser).toList();
+
+        if (chatRoom.getChatRoomType() == ChatRoomType.PRIVATE) {
+            throw new KakaoException(ExceptionCode.CHATROOM_NOT_INVITE);
+        }
+
+        // 해당 유저들이 이미 채팅방에 초대된 사람인지 확인해야 함.
+
+        for (User user : users) {
+            chatParticipantService.setChatParticipant(chatRoom, user);
+        }
+
+        chatRoom.plusParticipantCount(users.size());
+        chatRoomRepository.save(chatRoom);
+
+        List<User> chatRoomUsers = chatRoom.getChatParticipants().stream().map(ChatParticipant::getUser).toList();
+
+        return ChatRoomDetailResponseDto.of(chatRoom, chatRoomUsers);
+    }
+
+    public List<ChatRoomResponseDto> getChatRooms(String email, Pageable pageable) {
+        User loginUser = userService.getUser(email);
+
+        Slice<ChatRoom> chatRoomByUser = chatParticipantRepository.findChatRoomByUser(loginUser, pageable);
+
+        return chatRoomByUser.stream().map(ChatRoomResponseDto::of).toList();
     }
 }

@@ -26,18 +26,25 @@ public class ChatRoom extends BaseEntity implements Serializable {
 
     private String name;
 
+    private int participantCount;
+
     @Enumerated(EnumType.STRING)
     private ChatRoomType chatRoomType;
 
     @OneToMany(mappedBy = "chatRoom")
     private List<ChatParticipant> chatParticipants = new ArrayList<>();
 
-    private ChatRoom(String name, ChatRoomType chatRoomType) {
+    private ChatRoom(String name, int participantCount, ChatRoomType chatRoomType) {
         this.name = name;
+        this.participantCount = participantCount;
         this.chatRoomType = chatRoomType;
     }
-    public static ChatRoom createChatRoom(String name, ChatRoomType chatRoomType) {
-        return new ChatRoom(name, chatRoomType);
+
+    public void plusParticipantCount(int count) {
+        participantCount += count;
     }
 
+    public static ChatRoom createChatRoom(String name, int participantCount, ChatRoomType chatRoomType) {
+        return new ChatRoom(name, participantCount, chatRoomType);
+    }
 }
