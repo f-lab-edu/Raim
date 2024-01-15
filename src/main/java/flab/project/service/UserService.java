@@ -1,9 +1,12 @@
 package flab.project.service;
 
+import com.github.javafaker.Faker;
+import com.github.javafaker.Name;
 import flab.project.domain.EmailVerification;
 import flab.project.domain.SmsVerification;
 import flab.project.domain.User;
 import flab.project.domain.UserAgreement;
+import flab.project.domain.UserRole;
 import flab.project.dto.UserDto;
 import flab.project.dto.UserResponseDto;
 import flab.project.exception.ExceptionCode;
@@ -13,6 +16,7 @@ import flab.project.repository.SmsVerificationRepository;
 import flab.project.repository.UserRepository;
 import flab.project.util.EncryptionUtils;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -165,9 +169,35 @@ public class UserService {
         return userRepository.findById(userId).orElseThrow(() -> new KakaoException(ExceptionCode.USER_NOT_FOUND));
     }
 
+    public User getUser(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new KakaoException(ExceptionCode.USER_NOT_FOUND));
+    }
+
     public List<UserResponseDto> getUserFriends(Long userId) {
         List<UserResponseDto> friends = userRepository.findAll().stream().filter(user -> user.getId() != userId)
                 .map(user -> UserResponseDto.of(user)).collect(Collectors.toList());
         return friends;
+    }
+
+    public void testUserInput() {
+        Faker faker = new Faker(Locale.KOREA);
+
+        for (int i = 0; i < 1000000; i++) {
+            String name = faker.name().fullName();
+            String email = faker.internet().emailAddress();
+            String phoneNumber = faker.phoneNumber().phoneNumber().replaceAll("-", "");
+
+            User user = User.builder()
+                    .name(name)
+                    .email(email)
+                    .password(passwordEncoder.encode("asdf1234!"))
+                    .phoneNumber(phoneNumber)
+                    .nickname(name)
+                    .userRole(UserRole.USER)
+                    .build();
+
+            userRepository.save(user);
+        }
+
     }
 }
