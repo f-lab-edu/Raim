@@ -62,7 +62,6 @@ public class ChatRoomService {
         return findChatRoom.isPresent();
     }
 
-    @Transactional
     public ChatRoomDetailResponseDto createChatRoom(ChatRoomRequestDto chatRoomRequestDto) {
         String roomName = chatRoomRequestDto.getRoomName();
 
@@ -73,7 +72,7 @@ public class ChatRoomService {
         }
 
         if (usersId.size() == PRIVATE_CHAT_PARTICIPANT_COUNT) {
-            return createPrivateChatRoom(roomName, usersId);
+            return this.createPrivateChatRoom(roomName, usersId);
         }
 
         return createGroupChatRoom(roomName, usersId);
@@ -100,8 +99,7 @@ public class ChatRoomService {
 
     @Transactional
     public ChatRoomDetailResponseDto createPrivateChatRoom(String roomName, List<Long> usersId) {
-        List<User> users = usersId.stream().map(userId ->
-                userService.getUser(userId)).toList();
+        List<User> users = usersId.stream().map(userService::getUser).toList();
 
         if (roomName.equals(""))
             roomName = createDefaultChatRoomName(users);
@@ -233,7 +231,7 @@ public class ChatRoomService {
         for (User user : users) {
             chatParticipantService.setChatParticipant(chatRoom, user);
         }
-        
+
         chatRoom.plusParticipantCount(users.size());
         chatRoomRepository.save(chatRoom);
 
@@ -247,6 +245,6 @@ public class ChatRoomService {
 
         Slice<ChatRoom> chatRoomByUser = chatParticipantRepository.findChatRoomByUser(loginUser, pageable);
 
-        return chatRoomByUser.stream().map(chatRoom -> ChatRoomResponseDto.of(chatRoom)).toList();
+        return chatRoomByUser.stream().map(ChatRoomResponseDto::of).toList();
     }
 }

@@ -185,7 +185,7 @@ public class UserService {
         for (int i = 0; i < 1000000; i++) {
             String name = faker.name().fullName();
             String email = faker.internet().emailAddress();
-            String phoneNumber = faker.phoneNumber().phoneNumber().replaceAll("-", "");
+            String phoneNumber = faker.phoneNumber().phoneNumber().replace("-", "");
 
             User user = User.builder()
                     .name(name)

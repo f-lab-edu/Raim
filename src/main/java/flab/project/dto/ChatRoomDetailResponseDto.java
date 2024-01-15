@@ -1,5 +1,7 @@
 package flab.project.dto;
 
+import static java.util.stream.Collectors.toList;
+
 import flab.project.domain.ChatRoom;
 import flab.project.domain.ChatRoomType;
 import flab.project.domain.User;
@@ -24,7 +26,7 @@ public class ChatRoomDetailResponseDto {
 
     public static ChatRoomDetailResponseDto of(ChatRoom chatRoom, List<User> users) {
         return new ChatRoomDetailResponseDto(chatRoom.getId(), chatRoom.getName(), chatRoom.getChatRoomType(),
-                users.stream().map(user -> UserResponseDto.of(user)).collect(
-                        Collectors.toList()));
+                users.stream().map(UserResponseDto::of).collect(
+                        toList()));
     }
 }
