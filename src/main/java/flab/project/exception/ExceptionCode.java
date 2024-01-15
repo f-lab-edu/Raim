@@ -30,6 +30,9 @@ public enum ExceptionCode {
     PHONE_NUMBER_VALIDATION(HttpStatus.BAD_REQUEST, "휴대전화 형식이 맞지 않습니다.", "잘못된 형식입니다.", 20004),
     PASSWORD_CONFIRM(HttpStatus.BAD_REQUEST, "비밀번호와 확인 비밀번호가 일치하지 않습니다.", "잘못된 형식입니다.", 20005),
 
+    ALREADY_FRIEND(HttpStatus.BAD_REQUEST, "이미 친구입니다.", "이미 친구입니다.", 30000),
+    NO_FRIEND_RELATIONSHIP(HttpStatus.BAD_REQUEST, "없는 친구 관계입니다.", "잘못된 입력입니다.", 30001),
+
     CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 채팅방입니다.", "잘못된 입력입니다.", 50000),
     CHATROOM_FORBIDDEN(HttpStatus.FORBIDDEN, "접근할 수 없는 채팅방입니다.", "접근 권한이 없습니다.", 50001),
 

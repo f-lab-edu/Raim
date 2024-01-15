@@ -1,6 +1,5 @@
 package flab.project.domain;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -9,17 +8,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.envers.AuditJoinTable;
-import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
-import org.hibernate.envers.RelationTargetAuditMode;
 
 @Entity
 @Getter
@@ -52,6 +46,10 @@ public class User extends BaseEntity{
     @NotAudited
     private List<ChatParticipant> chatParticipants = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user")
+    @NotAudited
+    private List<Friend> friends = new ArrayList<>();
+
     @Builder
     public User(String email, String password, String name, String phoneNumber, String nickname, UserRole userRole) {
         this.email = email;
@@ -65,4 +63,5 @@ public class User extends BaseEntity{
     public void changeNickname(String nickname) {
         this.nickname = nickname;
     }
+
 }

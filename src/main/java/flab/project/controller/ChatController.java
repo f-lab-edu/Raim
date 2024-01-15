@@ -1,7 +1,6 @@
 package flab.project.controller;
 
 import flab.project.domain.User;
-import flab.project.dto.ChatMessageDto;
 import flab.project.dto.ChatMessageResponseDto;
 import flab.project.dto.CommonResponseDto;
 import flab.project.service.ChatMessageService;
@@ -34,7 +33,7 @@ public class ChatController {
     }
 
     @GetMapping("/message/{lastMessageId}")
-    public CommonResponseDto getUnreadMessage(
+    public CommonResponseDto<List<ChatMessageResponseDto>> getUnreadMessage(
             @PathVariable Long lastMessageId,
             @AuthenticationPrincipal User user) {
 
