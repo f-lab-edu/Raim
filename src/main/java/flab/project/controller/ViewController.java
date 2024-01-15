@@ -1,9 +1,7 @@
 package flab.project.controller;
 
-import flab.project.domain.ChatRoomType;
 import flab.project.domain.User;
-import flab.project.dto.ChatRoomResponseDto;
-import flab.project.dto.PrivateChatRoomResponseDto;
+import flab.project.dto.ChatRoomDetailResponseDto;
 import flab.project.dto.UserResponseDto;
 import flab.project.service.ChatRoomService;
 import flab.project.service.UserService;
@@ -57,7 +55,7 @@ public class ViewController {
                            @PathVariable Long userId) {
 
         List<Long> usersId = List.of(user.getId(), userId);
-        ChatRoomResponseDto privateChatRoom = chatRoomService.createPrivateChatRoom(usersId);
+        ChatRoomDetailResponseDto privateChatRoom = chatRoomService.createPrivateChatRoom("", usersId);
 
         return "redirect:/chat/" + privateChatRoom.getRoomId();
     }
@@ -70,7 +68,7 @@ public class ViewController {
             model.addAttribute("loginSuccess", true);
         }
 
-        ChatRoomResponseDto chatRoom = chatRoomService.getChatRoom(roomId, user);
+        ChatRoomDetailResponseDto chatRoom = chatRoomService.getChatRoom(roomId, user);
         model.addAttribute("loginUser", UserResponseDto.of(user));
         model.addAttribute("chatRoom", chatRoom);
 

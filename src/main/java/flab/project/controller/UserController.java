@@ -127,4 +127,9 @@ public class UserController {
 
         return ResponseEntity.ok().header("sms-verification-key", smsService.checkSmsCode(phoneNumber, code)).build();
     }
+
+    @GetMapping("/test")
+    public void testUser() {
+        userService.testUserInput();
+    }
 }

@@ -228,10 +228,13 @@ public class ChatRoomService {
             throw new KakaoException(ExceptionCode.CHATROOM_NOT_INVITE);
         }
 
+        // 해당 유저들이 이미 채팅방에 초대된 사람인지 확인해야 함.
+
         for (User user : users) {
             chatParticipantService.setChatParticipant(chatRoom, user);
         }
-
+        
+        chatRoom.plusParticipantCount(users.size());
         chatRoomRepository.save(chatRoom);
 
         List<User> chatRoomUsers = chatRoom.getChatParticipants().stream().map(ChatParticipant::getUser).toList();
