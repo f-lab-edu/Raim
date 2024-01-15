@@ -26,7 +26,6 @@ public class ChatRoomDetailResponseDto {
 
     public static ChatRoomDetailResponseDto of(ChatRoom chatRoom, List<User> users) {
         return new ChatRoomDetailResponseDto(chatRoom.getId(), chatRoom.getName(), chatRoom.getChatRoomType(),
-                users.stream().map(UserResponseDto::of).collect(
-                        toList()));
+                users.stream().map(UserResponseDto::of).toList());
     }
 }

@@ -50,15 +50,15 @@ public class ViewController {
         return "/friends";
     }
 
-    @GetMapping("/friends/chat/{userId}")
-    public String createChatRoom(@AuthenticationPrincipal User user,
-                           @PathVariable Long userId) {
-
-        List<Long> usersId = List.of(user.getId(), userId);
-        ChatRoomDetailResponseDto privateChatRoom = chatRoomService.createPrivateChatRoom("", usersId);
-
-        return "redirect:/chat/" + privateChatRoom.getRoomId();
-    }
+//    @GetMapping("/friends/chat/{userId}")
+//    public String createChatRoom(@AuthenticationPrincipal User user,
+//                           @PathVariable Long userId) {
+//
+//        List<Long> usersId = List.of(user.getId(), userId);
+//        ChatRoomDetailResponseDto privateChatRoom = chatRoomService.createChatRoom("", usersId);
+//
+//        return "redirect:/chat/" + privateChatRoom.getRoomId();
+//    }
 
     @GetMapping("/chat/{roomId}")
     public String chatRoomPage(@AuthenticationPrincipal User user,
