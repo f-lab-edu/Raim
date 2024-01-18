@@ -1,5 +1,6 @@
 package flab.project.controller;
 
+import flab.project.domain.FriendStatus;
 import flab.project.dto.CommonResponseDto;
 import flab.project.dto.FriendResponseDto;
 import flab.project.security.userDetails.UserContext;
@@ -50,17 +51,14 @@ public class FriendController {
         return CommonResponseDto.of("친구 목록", friends);
     }
 
-    @DeleteMapping("/{friendId}")
-    public void deleteFriendByEmail(
-            @PathVariable Long friendId) {
-        friendService.deleteFriend(friendId);
-    }
-
     @GetMapping("/{friendId}")
-    public void changeBlockFriendById(
+    public CommonResponseDto<FriendResponseDto> changeFriendMode(
+            @AuthenticationPrincipal UserContext user,
             @PathVariable Long friendId,
-            @RequestParam boolean isBlock
+            @RequestParam FriendStatus friendMode
     ) {
-        friendService.changeBlockFriend(friendId, isBlock);
+        FriendResponseDto friendResponseDto = friendService.changeFriendMode(user.getUsername(), friendId, friendMode);
+
+        return CommonResponseDto.of("친구 모드 변경 결과", friendResponseDto);
     }
 }
