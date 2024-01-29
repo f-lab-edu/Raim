@@ -39,6 +39,9 @@ public enum ExceptionCode {
     CHATROOM_NOT_INVITE(HttpStatus.BAD_REQUEST, "개인 채팅에 초대할 수 업습니다.", "잘못된 입력입니다.", 50003),
 
     REQUEST_TOO_FAST(HttpStatus.TOO_MANY_REQUESTS, "요청이 너무 빠릅니다.", "요청할 수 없습니다.", 60000),
+    BAD_FILE_TYPE(HttpStatus.BAD_REQUEST, "잘못된 파일 형식입니다.", "잘못된 파일 형식입니다.", 60001),
+    FILE_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "파일이 너무 큽니다.", "파일이 너무 큽니다.", 60002),
+    FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "파일을 찾을 수 없습니다.", "파일을 찾을 수 없습니다.", 60003),
 
     API_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "외부 API를 처리하지 못했습니다.", "응답할 수 없습니다.", 70000),
 

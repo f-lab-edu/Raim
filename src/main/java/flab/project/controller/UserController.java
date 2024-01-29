@@ -2,8 +2,12 @@ package flab.project.controller;
 
 import flab.project.dto.CommonResponseDto;
 import flab.project.dto.EmailResponseDto;
+import flab.project.dto.ProfileRequestDto;
+import flab.project.dto.ProfileResponseDto;
 import flab.project.dto.UserDto;
 import flab.project.exception.ErrorResponse;
+import flab.project.security.userDetails.UserContext;
+import flab.project.service.ProfileService;
 import flab.project.service.RequestHistoryService;
 import flab.project.service.SmsService;
 import flab.project.service.UserService;
@@ -18,8 +22,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import static flab.project.util.ValidationUtils.validateEmail;
 import static flab.project.util.ValidationUtils.validatePhoneNumber;
@@ -32,6 +39,7 @@ public class UserController {
     private final UserService userService;
     private final SmsService smsService;
     private final RequestHistoryService requestHistoryService;
+    private final ProfileService profileService;
 
     @Operation(summary = "회원 가입", description = "새로운 회원을 등록합니다.")
     @Parameter(name = "UserDto", description = "User 회원 가입을 위한 데이터.")
@@ -126,6 +134,26 @@ public class UserController {
         validatePhoneNumber(phoneNumber);
 
         return ResponseEntity.ok().header("sms-verification-key", smsService.checkSmsCode(phoneNumber, code)).build();
+    }
+
+    @GetMapping("/{userId}")
+    public void profile(
+            @PathVariable Long userId
+    ) {
+
+    }
+
+    @PostMapping(value = "/profile", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public CommonResponseDto<ProfileResponseDto> updateProfile(
+            @AuthenticationPrincipal UserContext user,
+            @RequestPart ProfileRequestDto profileRequestDto,
+            @RequestPart(required = false) MultipartFile profileImage,
+            @RequestPart(required = false) MultipartFile backgroundImage
+    ) {
+        ProfileResponseDto profileResponseDto = profileService.updateProfile(user.getUsername(), profileRequestDto,
+                profileImage, backgroundImage);
+
+        return CommonResponseDto.of("유저 프로필", profileResponseDto);
     }
 
     @GetMapping("/test")
