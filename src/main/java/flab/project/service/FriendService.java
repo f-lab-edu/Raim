@@ -7,6 +7,7 @@ import flab.project.dto.FriendResponseDto;
 import flab.project.exception.ExceptionCode;
 import flab.project.exception.KakaoException;
 import flab.project.repository.FriendRepository;
+import flab.project.repository.FriendRepositoryCustom;
 import flab.project.repository.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class FriendService {
 
     private final FriendRepository friendRepository;
     private final UserRepository userRepository;
+    private final FriendRepositoryCustom friendRepositoryCustom;
 
     @Transactional
     public FriendResponseDto plusFriendByPhoneNumber(User user, String phoneNumber) {
@@ -82,12 +84,34 @@ public class FriendService {
         return FriendResponseDto.of(friend);
     }
 
-    @Transactional
-    public List<FriendResponseDto> getUserFriends(User user) {
+    @Transactional(readOnly = true)
+    public List<FriendResponseDto> getUserFriends(String userEmail, FriendStatus friendStatus) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new KakaoException(ExceptionCode.USER_NOT_FOUND));
+
+        switch (friendStatus) {
+            case ACTIVE -> {
+                return getUserActiveFriends(user);
+            }
+            case HIDDEN, BLOCK -> {
+                return getUserFriends(user, friendStatus);
+            }
+            default -> throw new KakaoException(ExceptionCode.BAD_REQUEST);
+        }
+    }
+
+    private List<FriendResponseDto> getUserActiveFriends(User user) {
         return friendRepository.findByUser(user).stream()
                 .map(FriendResponseDto::of)
                 .toList();
     }
+
+    private List<FriendResponseDto> getUserFriends(User user, FriendStatus friendStatus) {
+        return friendRepositoryCustom.findFriend(friendStatus).stream()
+                .map(FriendResponseDto::of)
+                .toList();
+    }
+
 
     private void checkUserFriend(User loginUser, Friend friend) {
         if (!loginUser.equals(friend.getUser())) {

@@ -44,12 +44,14 @@ public class FriendController {
     // DB에 User로 인덱스를 걸어 최적화할 수 있는 부분이 있지 않을까?
     @GetMapping("/friends")
     public CommonResponseDto<List<FriendResponseDto>> getUserFriends(
-            @AuthenticationPrincipal UserContext user
+            @AuthenticationPrincipal UserContext user,
+            @RequestParam FriendStatus friendStatus
     ) {
-        List<FriendResponseDto> friends = friendService.getUserFriends(user.getUser());
+        List<FriendResponseDto> friends = friendService.getUserFriends(user.getUsername(), friendStatus);
 
         return CommonResponseDto.of("친구 목록", friends);
     }
+
 
     @GetMapping("/{friendId}")
     public CommonResponseDto<FriendResponseDto> changeFriendMode(
