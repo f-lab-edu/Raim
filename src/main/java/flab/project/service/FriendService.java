@@ -10,6 +10,8 @@ import flab.project.repository.FriendRepository;
 import flab.project.repository.FriendRepositoryCustom;
 import flab.project.repository.UserRepository;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -114,8 +116,18 @@ public class FriendService {
 
 
     private void checkUserFriend(User loginUser, Friend friend) {
-        if (!loginUser.equals(friend.getUser())) {
+
+        // User의 친구 목록에 해당 친구 id가 있는지 확인한다.
+        Set<Long> friends = loginUser.getFriends().stream().map(Friend::getId).collect(Collectors.toSet());
+
+        if (!friends.contains(friend.getId())) {
             throw new KakaoException(ExceptionCode.NOT_FRIEND);
         }
+/*
+        // User의 id가 해당 Friend의 user로 등록되어있는지 확인한다.
+        if (loginUser.getId() != friend.getUser().getId()) {
+            throw new KakaoException(ExceptionCode.NOT_FRIEND);
+        }
+*/
     }
 }
