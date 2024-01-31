@@ -137,10 +137,11 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public void profile(
+    public CommonResponseDto<ProfileResponseDto> userProfile(
             @PathVariable Long userId
     ) {
-
+        ProfileResponseDto profileResponseDto = profileService.getUserProfile(userId);
+        return CommonResponseDto.of("유저 프로필", profileResponseDto);
     }
 
     @PostMapping(value = "/profile", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
