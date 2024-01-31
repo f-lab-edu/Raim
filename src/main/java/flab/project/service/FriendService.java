@@ -78,7 +78,7 @@ public class FriendService {
                 .orElseThrow(() -> new KakaoException(ExceptionCode.NO_FRIEND_RELATIONSHIP));
 
         checkUserFriend(loginUser, friend);
-
+      
         friend.changeFriendMode(friendMode);
 
         friendRepository.save(friend);
@@ -113,7 +113,6 @@ public class FriendService {
                 .map(FriendResponseDto::of)
                 .toList();
     }
-
 
     private void checkUserFriend(User loginUser, Friend friend) {
 

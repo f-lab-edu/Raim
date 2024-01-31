@@ -35,6 +35,12 @@ public class User extends BaseEntity{
 
     private String nickname;
 
+    private String profileImage;
+
+    private String backgroundImage;
+
+    private String statusMessage;
+
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
@@ -64,4 +70,15 @@ public class User extends BaseEntity{
         this.nickname = nickname;
     }
 
+    public void updateProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
+
+    public void updateBackgroundImage(String backgroundImage) {
+        this.backgroundImage = backgroundImage;
+    }
+
+    public void updateStatusMessage(String statusMessage) {
+        this.statusMessage = statusMessage;
+    }
 }
