@@ -32,6 +32,9 @@ public enum ExceptionCode {
 
     ALREADY_FRIEND(HttpStatus.BAD_REQUEST, "이미 친구입니다.", "이미 친구입니다.", 30000),
     NO_FRIEND_RELATIONSHIP(HttpStatus.BAD_REQUEST, "없는 친구 관계입니다.", "잘못된 입력입니다.", 30001),
+    NOT_FRIEND(HttpStatus.BAD_REQUEST, "유저의 친구가 아닙니다.", "잘못된 입력입니다.", 30002),
+    ALREADY_DELETED_FRIEND(HttpStatus.BAD_REQUEST, "이미 삭제된 유저입니다.", "이미 삭제된 유저입니다.", 30003),
+
 
     CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 채팅방입니다.", "잘못된 입력입니다.", 50000),
     CHATROOM_FORBIDDEN(HttpStatus.FORBIDDEN, "접근할 수 없는 채팅방입니다.", "접근 권한이 없습니다.", 50001),
@@ -43,6 +46,7 @@ public enum ExceptionCode {
     BAD_FILE_TYPE(HttpStatus.BAD_REQUEST, "잘못된 파일 형식입니다.", "잘못된 파일 형식입니다.", 60002),
     FILE_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "파일이 너무 큽니다.", "파일이 너무 큽니다.", 60003),
     FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "파일을 찾을 수 없습니다.", "파일을 찾을 수 없습니다.", 60004),
+
 
     API_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "외부 API를 처리하지 못했습니다.", "응답할 수 없습니다.", 70000),
 
